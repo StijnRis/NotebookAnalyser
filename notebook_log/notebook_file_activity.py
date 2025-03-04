@@ -1,8 +1,10 @@
 from datetime import datetime
+from functools import lru_cache
 from typing import List
 
 from notebook_log.notebook_activity import NotebookActivity
 from notebook_log.notebook_log_entry import NotebookLogEntry
+from notebook_log.notebook_progression import NotebookProgression
 
 
 class NotebookFileActivity(NotebookActivity):
@@ -15,6 +17,7 @@ class NotebookFileActivity(NotebookActivity):
         log_entries: List[NotebookLogEntry],
     ):
         super().__init__(log_entries)
+        self.idle_threshold_seconds = 3600
 
     def check_invariants(self):
         super().check_invariants()
@@ -28,39 +31,6 @@ class NotebookFileActivity(NotebookActivity):
 
     def get_file_path(self):
         return self._log_entries[0].notebookState.notebookPath
-    
-    def get_progressions(self):
-        """
-        Calculate the progression of notebook content over time.
-        """
-        saved_contents = self.get_all_saved_notebook_contents()
-
-        times = []
-        ast_progression = []
-        output_progression = []
-        code_progression = []
-
-        # Check if user has saved any notebook content
-        if len(saved_contents) == 0:
-            return times, ast_progression, output_progression, code_progression
-
-        last_notebook_content = saved_contents[-1][1]
-
-        for event_time, content in saved_contents:
-            ast_difference = content.get_ast_difference_ratio(last_notebook_content)
-
-            output_difference = content.get_output_difference_ratio(
-                last_notebook_content
-            )
-
-            code_difference = content.get_code_difference_ratio(last_notebook_content)
-
-            times.append(event_time)
-            ast_progression.append(ast_difference)
-            output_progression.append(output_difference)
-            code_progression.append(code_difference)
-
-        return times, ast_progression, output_progression, code_progression
 
     def get_notebook_cell_content_at(self, cell_id: str, time: datetime):
         """
@@ -95,7 +65,49 @@ class NotebookFileActivity(NotebookActivity):
             # Check if entire notebook is saved
             if current_notebook_content is not None:
                 notebook_content = current_notebook_content
-
-            print(f"Unknown how to parse {entry.eventDetail.eventName} event")
+            else:
+                print(f"Unknown how to parse {entry.eventDetail.eventName} event")
 
         return notebook_content
+
+    @lru_cache(maxsize=None)
+    def get_progressions(self):
+        """
+        Calculate the progression of the notebook
+        """
+        saved_contents = self.get_all_saved_notebook_contents()
+
+        times: list[datetime] = []
+        ast_progression: list[float] = []
+        output_progression: list[float] = []
+        code_progression: list[float] = []
+
+        # Check if user has saved any notebook content
+        if len(saved_contents) == 0:
+            return (
+                NotebookProgression(times, ast_progression),
+                NotebookProgression(times, output_progression),
+                NotebookProgression(times, code_progression),
+            )
+
+        last_notebook_content = saved_contents[-1][1]
+
+        for event_time, content in saved_contents:
+            ast_difference = content.get_ast_difference_ratio(last_notebook_content)
+
+            output_difference = content.get_output_difference_ratio(
+                last_notebook_content
+            )
+
+            code_difference = content.get_code_difference_ratio(last_notebook_content)
+
+            times.append(event_time)
+            ast_progression.append(ast_difference)
+            output_progression.append(output_difference)
+            code_progression.append(code_difference)
+
+        return (
+            NotebookProgression(times, ast_progression),
+            NotebookProgression(times, output_progression),
+            NotebookProgression(times, code_progression),
+        )

@@ -1,15 +1,18 @@
 from chat_log.chat_message import ChatMessage
-from processor.report_generator import ReportGenerator
+from report.report_generator import ReportGenerator
 from user.user import User
 from user.users import Users
 
 
-class QuestionsAnalyser:
-    def __init__(self, report_generator: ReportGenerator):
-        self.report_generator = report_generator
+class QuestionAnalyser:
+    """
+    Generate report of a user question
+    """
+
+    def __init__(self):
         self.data = []
 
-    def process_message(self, message: ChatMessage):
+    def analyze_message(self, message: ChatMessage):
         print(f"Processing message {message.id}")
         body = message.body
         purpose = message.get_question_purpose()
@@ -17,22 +20,21 @@ class QuestionsAnalyser:
         self.data.append(
             {
                 "question": body,
+                "length": len(body),
                 "question_type": question_type,
                 "purpose": purpose,
             }
         )
 
-    def analyze_user(self, user: User):
+    def analyze_messages_of_user(self, user: User):
         print(f"Processing user {user.username}")
         messages = user.chat_log.get_questions().messages
         for question in messages:
-            self.process_message(question)
+            self.analyze_message(question)
 
-    def analyse_users(self, users: Users):
+    def analyse_messages_of_users(self, users: Users):
         for user in users.get_users():
-            self.analyze_user(user)
-
-        self.report_generator.display_data("Questions Report", self.data)
+            self.analyze_messages_of_user(user)
 
     def save_result_to_report(self, report: ReportGenerator):
-        report.display_data("Questions", self.data)
+        report.display_data("Questions Report", self.data)

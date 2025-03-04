@@ -20,6 +20,12 @@ class ChatInteraction(ChatActivity):
 
         # Check if there are only two messages
         assert len(self.messages) == 2, "There should be only two messages"
+    
+    def get_question(self):
+        return self.messages[0]
+    
+    def get_answer(self):
+        return self.messages[1]
 
     def get_waiting_time(self):
         return self.messages[1].time - self.messages[0].time

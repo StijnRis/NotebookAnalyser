@@ -29,9 +29,8 @@ class UsersBuilder:
             valid_file = file_name.startswith("jupyter-") and file_name.endswith("-log")
 
             if os.path.isfile(path) and valid_file:
-
                 # Add notebook log file path to user
-                username = file_name.replace("jupyter-", "").replace("-log", "")
+                username = file_name.replace("jupyter-", "").replace("-log", "")                
                 user_data = self.get_user_data(username)
                 user_data["notebook_log_file_paths"].append(path)
 
@@ -45,6 +44,7 @@ class UsersBuilder:
             path = os.path.join(volumes_directory, folder_name)
             if os.path.isdir(path) and not folder_name.startswith("_"):
                 username = folder_name
+
                 if self.verbose:
                     print(f"Finding data of user {username}")
 
@@ -52,7 +52,6 @@ class UsersBuilder:
                 for file_name in os.listdir(path):
                     file_path = os.path.join(path, file_name)
                     if os.path.isfile(file_path):
-
                         if file_name.endswith(".ipynb"):
                             user_data["notebook_file_paths"].append(file_path)
                         elif file_name.endswith(".chat"):
@@ -68,21 +67,19 @@ class UsersBuilder:
 
         # Load data into objects
         for username, user_data in self.users.items():
-            # try:
-                if self.verbose:
-                    print(f"Loading user {username}: ")
-                    print(f"  {len(user_data['chat_log_file_paths'])} chat log files")
-                    print(
-                        f"  {len(user_data['notebook_log_file_paths'])} notebook log files"
-                    )
-                    print(f"  {len(user_data['notebook_file_paths'])} notebook files")
+            if self.verbose:
+                print(f"Loading user {username}: ")
+                print(f"  {len(user_data['chat_log_file_paths'])} chat log files")
+                print(
+                    f"  {len(user_data['notebook_log_file_paths'])} notebook log files"
+                )
+                print(f"  {len(user_data['notebook_file_paths'])} notebook files")
 
-                user = User(username, chat_message_analyser)
-                user.load_chat_log_files(user_data["chat_log_file_paths"])
-                user.load_notebook_log_files(user_data["notebook_log_file_paths"])
-                user.load_notebook_files(user_data["notebook_file_paths"])
+            user = User(username, chat_message_analyser)
+            user.load_chat_log_files(user_data["chat_log_file_paths"])
+            user.load_notebook_log_files(user_data["notebook_log_file_paths"])
+            user.load_notebook_files(user_data["notebook_file_paths"])
 
-                build_users.add_user(user)
-            # except Exception as e:
-            #     print(f"Error loading user {username}: {e}")
+            build_users.add_user(user)
+
         return build_users

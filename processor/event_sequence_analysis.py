@@ -13,7 +13,7 @@ class EventSequenceAnalysis:
         sequences = []
 
         for user in self.users.get_users():
-            print(f"Processing user {user.username}")
+            print(f"Processing user {user.get_username()}")
             sequence = user.get_event_sequence()
             sequences.extend([x[1] for x in sequence])
 

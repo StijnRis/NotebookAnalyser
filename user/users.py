@@ -8,10 +8,9 @@ from user.user import User
 class Users:
 
     @staticmethod
-    def load_from_file(path: str, chat_message_analyser: ChatMessageAnalyser):
+    def load_from_file(path: str):
         with open(path, "rb") as f:
             loaded_processor: Users = pickle.load(f)
-            loaded_processor.chat_message_analyser = chat_message_analyser
             return loaded_processor
 
     def __init__(self, chat_message_analyser: ChatMessageAnalyser):
@@ -30,7 +29,7 @@ class Users:
 
     def get_user_by_name(self, username: str):
         for user in self.users:
-            if user.username == username:
+            if user.get_username() == username:
                 return user
         return None
 
