@@ -70,19 +70,3 @@ class NotebookCellActivity(NotebookActivity):
         end_result = self.get_content_at(time1).get_source()
         current_result = self.get_content_at(time2).get_source()
         return SequenceMatcher(None, end_result, current_result).ratio()
-
-    def get_overview(self, level=1) -> str:
-        return (
-            f"{'#' * level} Notebook summary of cell {self.get_cell_id()}\n\n"
-            f"Worked on from {self.get_start_time()} to {self.get_end_time()}\\\n"
-            f"Completion time = {self.get_completion_time()}\\\n"
-            f"Tab switches = {self.get_amount_of_tab_switches()}\\\n"
-            f"Times executed = {self.get_amount_of_executions()} times\\\n"
-            f"Runtime errors = {self.get_amount_of_runtime_errors()}\\\n"
-            f"Edit cycles = {self.get_amount_of_edit_cycles()}\\\n"
-            f"Similarity between initial and final state = {round(self.get_similarity_between_cell_states(self.get_start_time(), self.get_end_time()), 2)}\\\n"
-            f"{'#' * (level + 1)} Initial state\n\n"
-            f"```python\n{self.get_content_at(self.get_start_time())}\n```\n\n"
-            f"{'#' * (level + 1)} Final state\n\n"
-            f"```python\n{self.get_content_at(self.get_end_time())}\n```\n\n"
-        )

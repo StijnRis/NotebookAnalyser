@@ -1,18 +1,19 @@
 from datetime import timedelta
 
+from analyser.analyser import Analyser
 from chat_log.chat_message import ChatMessage
 from report.report_generator import ReportGenerator
 from user.user import User
 from user.users import Users
 
 
-class QuestionAnalyser:
+class QuestionAnalyser(Analyser):
     """
     Generate report of a user question
     """
 
     def __init__(self):
-        self.data = []
+        super().__init__()
 
     def analyze_message(self, user: User, message: ChatMessage):
         body = message.body
@@ -42,10 +43,7 @@ class QuestionAnalyser:
             }
         )
 
-    def analyse_messages_of_user(self, user: User):
+    def analyse_user(self, user: User):
         messages = user.chat_log.get_questions().messages
         for question in messages:
             self.analyze_message(user, question)
-
-    def save_result_to_report(self, report: ReportGenerator):
-        report.display_data("Questions Report", self.data)

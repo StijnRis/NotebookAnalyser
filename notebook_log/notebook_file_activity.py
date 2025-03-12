@@ -4,8 +4,7 @@ from typing import List
 
 from notebook_log.notebook_activity import NotebookActivity
 from notebook_log.notebook_cell_activity import NotebookCellActivity
-from notebook_log.notebook_content.notebook_content import NotebookContent
-from notebook_log.notebook_log_entry import NotebookLogEntry
+from notebook_log.notebook_log_entry import NotebookEventName, NotebookLogEntry
 from notebook_log.progression.notebook_progression_with_datetime import (
     NotebookProgressionWithDatetime,
 )
@@ -33,23 +32,7 @@ class NotebookFileActivity(NotebookActivity):
     def get_file_path(self):
         return self.log_entries[0].notebookState.notebookPath
 
-    def get_notebook_cell_content_at(self, cell_id: str, time: datetime):
-        """
-        Get the content of a notebook cell at a certain time.
-        """
-
-        notebook_content = self.get_notebook_content_at(time)
-
-        # Check if there is notebook content
-        if notebook_content is not None:
-            cells = notebook_content.cells
-            for cell in cells:
-                if cell.id == cell_id:
-                    return cell
-
-        return None
-
-    def get_notebook_content_at(self, time: datetime):
+    def get_content_at(self, time: datetime):
         """
         Get the notebook content at a certain time.
         """
@@ -68,6 +51,8 @@ class NotebookFileActivity(NotebookActivity):
                 notebook_content = current_notebook_content
             else:
                 print(f"Unknown how to parse {entry.eventDetail.eventName} event")
+                
+        assert notebook_content is not None, "Notebook content should be found"
 
         return notebook_content
 
@@ -115,7 +100,7 @@ class NotebookFileActivity(NotebookActivity):
 
     # TODO make protection against changes the index of a cell
     def get_notebook_cell_activities(self):
-        cell_index_to_activity: dict[int, List[NotebookLogEntry]] = {}  
+        cell_index_to_activity: dict[int, List[NotebookLogEntry]] = {}
 
         for entry in self.log_entries:
             event_name = entry.eventDetail.eventName
@@ -147,3 +132,28 @@ class NotebookFileActivity(NotebookActivity):
             notebook_cell_activities.append(
                 NotebookCellActivity(notebook_cell, entries)
             )
+    
+    def get_visible_periods(self):
+        """
+        Get the start and end times of every period this file was visible.
+        """
+        visible_periods: list[tuple[datetime, datetime]] = []
+        start_time = None
+
+        for entry in self.log_entries:
+            event_name = entry.eventDetail.eventName
+
+            if event_name == NotebookEventName.NOTEBOOK_VISIBLE:
+                if start_time is None:
+                    start_time = entry.eventDetail.eventTime
+            elif event_name == NotebookEventName.NOTEBOOK_HIDDEN:
+                if start_time is not None:
+                    end_time = entry.eventDetail.eventTime
+                    visible_periods.append((start_time, end_time))
+                    start_time = None
+
+        # If the notebook is still visible at the end of the log
+        if start_time is not None:
+            visible_periods.append((start_time, self.log_entries[-1].eventDetail.eventTime))
+
+        return visible_periods

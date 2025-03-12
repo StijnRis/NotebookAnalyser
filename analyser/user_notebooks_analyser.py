@@ -1,17 +1,16 @@
-from report.report_generator import ReportGenerator
+from analyser.analyser import Analyser
 from user.user import User
-from user.users import Users
 
 
-class NotebookAnalyser:
+class NotebookAnalyser(Analyser):
     """
     Generate report of user notebook
     """
 
     def __init__(self):
-        self.data = []
+        super().__init__()
 
-    def analyse_notebooks_of_user(self, user: User):
+    def analyse_user(self, user: User):
         username = user.get_username()
         notebook_activity = user.get_notebook_log()
 
@@ -45,6 +44,7 @@ class NotebookAnalyser:
                 "Start time": notebook_file.get_start_time(),
                 "End time": notebook_file.get_end_time(),
                 "Completion time": notebook_file.get_completion_time(),
+                "Editing time": notebook_file.get_editing_time(),
                 "AST progression": ast_progression_working_time,
                 "Output progression": output_progression_working_time,
                 "Code progression": code_progression_working_time,
@@ -54,6 +54,3 @@ class NotebookAnalyser:
             }
 
             self.data.append(user_data)
-
-    def save_result_to_report(self, report: ReportGenerator):
-        report.display_data("Notebooks Report", self.data)

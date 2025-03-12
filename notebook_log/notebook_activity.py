@@ -47,10 +47,41 @@ class NotebookActivity:
         assert False, "No event found"
 
     def get_completion_time(self):
+        """
+        Get the time it took to complete the notebook.
+        """
+
         return self.get_end_time() - self.get_start_time()
 
+    def get_editing_time(self):
+        """
+        Calculate the total time spent actively editing the notebook.
+        """
+
+        active_time = 0
+        last_edit_time = None
+
+        for entry in self.log_entries:
+            event_name = entry.eventDetail.eventName
+            event_time = entry.eventDetail.eventTime
+
+            if event_name in [
+                NotebookEventName.CELL_EDIT,
+                NotebookEventName.NOTEBOOK_VISIBLE,
+            ]:
+                if last_edit_time is not None:
+                    active_time += (event_time - last_edit_time).total_seconds()
+                last_edit_time = event_time
+            elif event_name == NotebookEventName.NOTEBOOK_HIDDEN:
+                last_edit_time = None
+
+        return active_time
+
     def get_cell_indexes(self):
-        """Get indexes of the cells which are used in this activity"""
+        """
+        Get indexes of the cells which are used in this activity
+        """
+
         ids = set()
 
         for entry in self.log_entries:
@@ -170,6 +201,22 @@ class NotebookActivity:
                 )
 
         return notebook_contents
+    
+    def get_active_file_at(self, time: datetime):
+        """
+        Get the active file at a certain time
+        """
+
+        files = self.split_by_file()
+
+        for entry in self.log_entries:
+            if entry.eventDetail.eventTime > time:
+                path = entry.notebookState.notebookPath
+                for file in files:
+                    if file.get_file_path() == path:
+                        return file
+
+        raise ValueError("Time before first event")
 
     def split_by_file(self):
         """
@@ -188,18 +235,4 @@ class NotebookActivity:
 
         return activities
 
-    def get_active_file_at(self, time: datetime):
-        """
-        Get the active file at a certain time
-        """
-
-        files = self.split_by_file()
-
-        for entry in self.log_entries:
-            if entry.eventDetail.eventTime > time:
-                path = entry.notebookState.notebookPath
-                for file in files:
-                    if file.get_file_path() == path:
-                        return file
-
-        raise ValueError("Time before first event")
+    

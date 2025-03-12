@@ -1,17 +1,18 @@
+from analyser.analyser import Analyser
 from chat_log.chat_interaction import ChatInteraction
 from report.report_generator import ReportGenerator
 from user.user import User
 from user.users import Users
 
 
-class InteractionAnalyser:
+class InteractionAnalyser(Analyser):
     """
     Generate report of a user question
     """
 
     def __init__(self):
-        self.data = []
-
+        super().__init__()
+        
     def analyze_interaction(self, message: ChatInteraction):
         question = message.get_question().body
         answer = message.get_answer().body
@@ -27,10 +28,7 @@ class InteractionAnalyser:
             }
         )
 
-    def analyse_interactions_of_user(self, user: User):
+    def analyse_user(self, user: User):
         messages = user.chat_log.get_interactions()
         for interaction in messages:
             self.analyze_interaction(interaction)
-
-    def save_result_to_report(self, report: ReportGenerator):
-        report.display_data("Interaction Report", self.data)

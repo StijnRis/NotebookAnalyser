@@ -16,6 +16,3 @@ class Users:
             if user.get_username() == username:
                 return user
         return None
-
-    def get_summary(self):
-        return "\n".join([user.get_summary() for user in self.users])

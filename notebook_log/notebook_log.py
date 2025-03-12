@@ -12,7 +12,3 @@ class NotebookLog(NotebookActivity):
 
     def __init__(self, log_entries: List[NotebookLogEntry]):
         super().__init__(log_entries)
-
-    
-    def get_overview(self, level=1):
-        return f"{'#' * level} Notebook activity\n\n" f"None yet"
