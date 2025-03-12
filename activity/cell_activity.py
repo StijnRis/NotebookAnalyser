@@ -1,7 +1,7 @@
 from difflib import SequenceMatcher
 
 from chat_log.chat_activity import ChatActivity
-from notebook_log.notebook_cell_activity_composite import NotebookCellActivityComposite
+from notebook_log.notebook_cell_activity import NotebookCellActivity
 
 
 class CellActivity:
@@ -11,7 +11,7 @@ class CellActivity:
 
     def __init__(
         self,
-        notebook_activity: NotebookCellActivityComposite,
+        notebook_activity: NotebookCellActivity,
         chat_activity: ChatActivity,
     ):
         self.notebook_activity = notebook_activity
@@ -19,9 +19,9 @@ class CellActivity:
 
     def get_used_ai_code(self):
         generated_codes = self.chat_activity.get_generated_code_snippets()
-        code = self.notebook_activity.get_notebook_cell_content_at(
-            self.notebook_activity.get_cell_id(), self.notebook_activity.get_end_time()
-        )
+        code = self.notebook_activity.get_content_at(
+            self.notebook_activity.get_end_time()
+        ).get_source()
 
         # Find all code snippets that are in the notebook state
         snippets = []
@@ -32,9 +32,7 @@ class CellActivity:
         return snippets
 
     def get_similirities_between_ai_code_and_cell(self, time):
-        code = self.notebook_activity.get_notebook_cell_content_at(
-            self.notebook_activity.get_cell_id(), time
-        )
+        code = self.notebook_activity.get_content_at(time).get_source()
         generated_codes = self.chat_activity.get_generated_code_snippets()
 
         # Find all code snippets that are in the notebook state

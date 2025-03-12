@@ -14,23 +14,14 @@ class ChatActivity:
 
     def __init__(
         self,
-        messages: Optional[list[ChatMessage]] = None,
-        users: Optional[dict[str, ChatUser]] = None,
+        messages: list[ChatMessage],
+        users: dict[str, ChatUser],
     ):
-        self.messages: list[ChatMessage] = messages if messages is not None else []
-        self.users: dict[str, ChatUser] = users if users is not None else {}
+        self.messages: list[ChatMessage] = messages
+        self.users: dict[str, ChatUser] = users
 
         self.messages.sort(key=lambda x: x.time)
 
-        self.check_invariants()
-
-    def add_messages(self, messages: list[ChatMessage]):
-        self.messages.extend(messages)
-        self.messages.sort(key=lambda x: x.time)
-        self.check_invariants()
-
-    def add_users(self, users: dict[str, ChatUser]):
-        self.users.update(users)
         self.check_invariants()
 
     def check_invariants(self):

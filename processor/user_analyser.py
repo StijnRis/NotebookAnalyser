@@ -1,5 +1,3 @@
-from typing import List
-
 from report.report_generator import ReportGenerator
 from user.user import User
 from user.users import Users
@@ -15,8 +13,6 @@ class UserAnalyser:
 
     def analyse_user(self, user: User):
         username = user.username
-        print(f"Analyzing user {username}")
-
         message_count = user.get_chat_log().get_amount_of_messages()
 
         user_data = {
@@ -25,10 +21,6 @@ class UserAnalyser:
         }
 
         self.data.append(user_data)
-
-    def analyse_users(self, users: Users):
-        for user in users.get_users():
-            self.analyse_user(user)
 
     def save_result_to_report(self, report: ReportGenerator):
         report.display_data("Users Report", self.data)

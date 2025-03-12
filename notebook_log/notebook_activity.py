@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 from notebook_log.notebook_content.notebook_content import NotebookContent
 from notebook_log.notebook_log_entry import NotebookEventName, NotebookLogEntry
@@ -7,34 +7,29 @@ from notebook_log.notebook_log_entry import NotebookEventName, NotebookLogEntry
 
 class NotebookActivity:
     """
-    A collection of notebook log entries.
+    A collection of log entries for a notebook.
     """
 
     def __init__(
         self,
-        log_entries: Optional[List[NotebookLogEntry]] = None,
+        log_entries: List[NotebookLogEntry],
     ):
-        self._log_entries = log_entries if log_entries is not None else []
+        self.log_entries = log_entries
 
-        self._log_entries.sort(key=lambda x: x.eventDetail.eventTime)
+        self.log_entries.sort(key=lambda x: x.eventDetail.eventTime)
 
-        self.check_invariants()
-
-    def add_log_entries(self, log_entries: List[NotebookLogEntry]):
-        self._log_entries.extend(log_entries)
-        self._log_entries.sort(key=lambda x: x.eventDetail.eventTime)
         self.check_invariants()
 
     def check_invariants(self):
         # Check that the log entries are sorted by time
-        for i in range(1, len(self._log_entries)):
+        for i in range(1, len(self.log_entries)):
             assert (
-                self._log_entries[i].eventDetail.eventTime
-                >= self._log_entries[i - 1].eventDetail.eventTime
+                self.log_entries[i].eventDetail.eventTime
+                >= self.log_entries[i - 1].eventDetail.eventTime
             ), "Log entries should be sorted by event time"
 
     def get_start_time(self):
-        for entry in self._log_entries:
+        for entry in self.log_entries:
             if entry.eventDetail.eventName not in [
                 "NotebookVisibleEvent",
                 "NotebookHiddenEvent",
@@ -43,7 +38,7 @@ class NotebookActivity:
         assert False, "No event found"
 
     def get_end_time(self):
-        for entry in reversed(self._log_entries):
+        for entry in reversed(self.log_entries):
             if entry.eventDetail.eventName not in [
                 "NotebookVisibleEvent",
                 "NotebookHiddenEvent",
@@ -58,7 +53,7 @@ class NotebookActivity:
         """Get indexes of the cells which are used in this activity"""
         ids = set()
 
-        for entry in self._log_entries:
+        for entry in self.log_entries:
             eventInfo = entry.eventDetail.eventInfo
             if eventInfo is None:
                 continue
@@ -79,7 +74,7 @@ class NotebookActivity:
         ids = set()
         indexes = self.get_cell_indexes()
 
-        for entry in self._log_entries:
+        for entry in self.log_entries:
             eventInfo = entry.eventDetail.eventInfo
             if eventInfo is None:
                 continue
@@ -92,7 +87,7 @@ class NotebookActivity:
 
     def get_amount_of_executions(self):
         total = 0
-        for entry in self._log_entries:
+        for entry in self.log_entries:
             event_name = entry.eventDetail.eventName
             if event_name == NotebookEventName.CELL_EXECUTE:
                 total += 1
@@ -100,16 +95,16 @@ class NotebookActivity:
         return total
 
     def get_amount_of_events(self):
-        return len(self._log_entries)
+        return len(self.log_entries)
 
     def get_event_by_index(self, index: int) -> Optional[NotebookLogEntry]:
-        if 0 <= index < len(self._log_entries):
-            return self._log_entries[index]
+        if 0 <= index < len(self.log_entries):
+            return self.log_entries[index]
         return None
 
     def get_amount_of_runtime_errors(self):
         total = 0
-        for entry in self._log_entries:
+        for entry in self.log_entries:
             event_name = entry.eventDetail.eventName
             if event_name == NotebookEventName.CELL_EXECUTE:
                 eventInfo = entry.eventDetail.eventInfo
@@ -121,7 +116,7 @@ class NotebookActivity:
 
     def get_amount_of_tab_switches(self):
         total = 0
-        for entry in self._log_entries:
+        for entry in self.log_entries:
             event_name = entry.eventDetail.eventName
             event_time = entry.eventDetail.eventTime
             if (
@@ -140,12 +135,15 @@ class NotebookActivity:
 
         total = 0
         edited = False
-        for entry in self._log_entries:
+        for entry in self.log_entries:
             event_name = entry.eventDetail.eventName
             if event_name == NotebookEventName.CELL_EXECUTE and edited:
                 total += 1
                 edited = False
-            if event_name in [NotebookEventName.CELL_EDIT, NotebookEventName.NOTEBOOK_VISIBLE]:
+            if event_name in [
+                NotebookEventName.CELL_EDIT,
+                NotebookEventName.NOTEBOOK_VISIBLE,
+            ]:
                 edited = True
 
         return total
@@ -157,7 +155,7 @@ class NotebookActivity:
 
         return [
             (entry.eventDetail.eventTime, entry.eventDetail.eventName)
-            for entry in self._log_entries
+            for entry in self.log_entries
         ]
 
     def get_all_saved_notebook_contents(self):
@@ -165,14 +163,14 @@ class NotebookActivity:
         Returns a list of tuples with the event time and notebook content.
         """
         notebook_contents: List[tuple[datetime, NotebookContent]] = []
-        for entry in self._log_entries:
+        for entry in self.log_entries:
             if entry.notebookState.notebookContent is not None:
                 notebook_contents.append(
                     (entry.eventDetail.eventTime, entry.notebookState.notebookContent)
                 )
 
         return notebook_contents
-    
+
     def split_by_file(self):
         """
         Split the notebook activity into activity per file
@@ -180,7 +178,7 @@ class NotebookActivity:
         from notebook_log.notebook_file_activity import NotebookFileActivity
 
         files = {}
-        for entry in self._log_entries:
+        for entry in self.log_entries:
             path = entry.notebookState.notebookPath
             if path not in files:
                 files[path] = []
@@ -189,3 +187,19 @@ class NotebookActivity:
         activities = [NotebookFileActivity(file) for file in files.values()]
 
         return activities
+
+    def get_active_file_at(self, time: datetime):
+        """
+        Get the active file at a certain time
+        """
+
+        files = self.split_by_file()
+
+        for entry in self.log_entries:
+            if entry.eventDetail.eventTime > time:
+                path = entry.notebookState.notebookPath
+                for file in files:
+                    if file.get_file_path() == path:
+                        return file
+
+        raise ValueError("Time before first event")

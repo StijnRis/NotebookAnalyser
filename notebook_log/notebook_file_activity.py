@@ -3,19 +3,20 @@ from functools import lru_cache
 from typing import List
 
 from notebook_log.notebook_activity import NotebookActivity
+from notebook_log.notebook_cell_activity import NotebookCellActivity
+from notebook_log.notebook_content.notebook_content import NotebookContent
 from notebook_log.notebook_log_entry import NotebookLogEntry
-from notebook_log.notebook_progression import NotebookProgression
+from notebook_log.progression.notebook_progression_with_datetime import (
+    NotebookProgressionWithDatetime,
+)
 
 
 class NotebookFileActivity(NotebookActivity):
     """
-    Activity of a specific notebook file.
+    Activity of one notebook file.
     """
 
-    def __init__(
-        self,
-        log_entries: List[NotebookLogEntry],
-    ):
+    def __init__(self, log_entries: List[NotebookLogEntry]):
         super().__init__(log_entries)
         self.idle_threshold_seconds = 3600
 
@@ -23,14 +24,14 @@ class NotebookFileActivity(NotebookActivity):
         super().check_invariants()
 
         # Check that the log entries are for the same file
-        for entry in self._log_entries:
+        for entry in self.log_entries:
             assert (
                 entry.notebookState.notebookPath
-                == self._log_entries[0].notebookState.notebookPath
+                == self.log_entries[0].notebookState.notebookPath
             ), "Log entries should be for the same notebook file"
 
     def get_file_path(self):
-        return self._log_entries[0].notebookState.notebookPath
+        return self.log_entries[0].notebookState.notebookPath
 
     def get_notebook_cell_content_at(self, cell_id: str, time: datetime):
         """
@@ -55,7 +56,7 @@ class NotebookFileActivity(NotebookActivity):
         notebook_content = None
 
         # Loop through all events
-        for entry in self._log_entries:
+        for entry in self.log_entries:
             current_notebook_content = entry.notebookState.notebookContent
 
             # Check if this event happened
@@ -85,9 +86,9 @@ class NotebookFileActivity(NotebookActivity):
         # Check if user has saved any notebook content
         if len(saved_contents) == 0:
             return (
-                NotebookProgression(times, ast_progression),
-                NotebookProgression(times, output_progression),
-                NotebookProgression(times, code_progression),
+                NotebookProgressionWithDatetime(times, ast_progression),
+                NotebookProgressionWithDatetime(times, output_progression),
+                NotebookProgressionWithDatetime(times, code_progression),
             )
 
         last_notebook_content = saved_contents[-1][1]
@@ -107,7 +108,42 @@ class NotebookFileActivity(NotebookActivity):
             code_progression.append(code_difference)
 
         return (
-            NotebookProgression(times, ast_progression),
-            NotebookProgression(times, output_progression),
-            NotebookProgression(times, code_progression),
+            NotebookProgressionWithDatetime(times, ast_progression),
+            NotebookProgressionWithDatetime(times, output_progression),
+            NotebookProgressionWithDatetime(times, code_progression),
         )
+
+    # TODO make protection against changes the index of a cell
+    def get_notebook_cell_activities(self):
+        cell_index_to_activity: dict[int, List[NotebookLogEntry]] = {}  
+
+        for entry in self.log_entries:
+            event_name = entry.eventDetail.eventName
+
+            eventInfo = entry.eventDetail.eventInfo
+            if eventInfo is None:
+                print(f"No event info found for {event_name}")
+                continue
+
+            if eventInfo.cells is not None:
+                cells = eventInfo.cells
+                cell_ids = [cell.index for cell in cells]
+            else:
+                cell_ids = [eventInfo.index]
+                if cell_ids[0] is None:
+                    print(f"No cell index found for {event_name}")
+                    continue
+
+            for cell_id in cell_ids:
+                if cell_id not in cell_index_to_activity:
+                    cell_index_to_activity[cell_id] = []
+
+                cell_index_to_activity[cell_id].append(entry)
+
+        notebook_cell_activities = []
+        for cell_id, entries in cell_index_to_activity.items():
+            notebook_cell = self.notebook.get_cell_by_id(cell_id)
+            assert notebook_cell is not None, "Notebook cell not found"
+            notebook_cell_activities.append(
+                NotebookCellActivity(notebook_cell, entries)
+            )

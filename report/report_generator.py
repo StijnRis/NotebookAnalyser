@@ -1,16 +1,19 @@
 from datetime import datetime, timedelta
 from enum import Enum
+from typing import List, Sequence
 
 import xlsxwriter
 from xlsxwriter.utility import xl_col_to_name
 
-from notebook_log.notebook_progression import NotebookProgression
-from common.time_series import TimeSeries
+from notebook_log.progression.notebook_progression_with_datetime import (
+    NotebookProgressionWithDatetime,
+)
+from notebook_log.progression.time_series import TimeSeries
 
 
 class ReportGenerator:
     def __init__(self, file_path: str):
-        self.workbook = xlsxwriter.Workbook(file_path)
+        self.workbook = xlsxwriter.Workbook(file_path, {"nan_inf_to_errors": True})
 
     def display_data(self, worksheet_name: str, data: list[dict]):
         # Check that all have same keys
@@ -58,7 +61,9 @@ class ReportGenerator:
                     worksheet, keys.index(key), key, column_data
                 )
             elif isinstance(data[0][key], str):
-                self.write_column_with_text_data(worksheet, keys.index(key), key, column_data)
+                self.write_column_with_text_data(
+                    worksheet, keys.index(key), key, column_data
+                )
             elif isinstance(data[0][key], datetime):
                 self.write_column_with_datetime_data(
                     worksheet, keys.index(key), key, column_data
@@ -68,14 +73,20 @@ class ReportGenerator:
                     worksheet, keys.index(key), key, column_data
                 )
             elif isinstance(data[0][key], TimeSeries):
-                self.write_column_with_progression_data(
+                self.write_column_with_timeseries_data(
+                    worksheet, keys.index(key), key, column_data
+                )
+            elif isinstance(data[0][key], NotebookProgressionWithDatetime):
+                self.write_column_with_notebook_progression_with_datetime_data(
                     worksheet, keys.index(key), key, column_data
                 )
             elif isinstance(data[0][key], Enum):
-                self.write_column_with_enum_data(worksheet, keys.index(key), key, column_data)
+                self.write_column_with_enum_data(
+                    worksheet, keys.index(key), key, column_data
+                )
             else:
                 raise ValueError(f"Unsupported type: {type(data[0][key])}")
-            
+
     def write_column_with_text_data(
         self,
         worksheet: xlsxwriter.Workbook.worksheet_class,
@@ -86,12 +97,12 @@ class ReportGenerator:
         for i, item in enumerate(column_data):
             worksheet.write(i + 1, column_nr, item)
 
-    def write_column_with_progression_data(
+    def write_column_with_timeseries_data(
         self,
         worksheet: xlsxwriter.Workbook.worksheet_class,
         column_nr: int,
         column_name: str,
-        column_data: list[TimeSeries],
+        column_data: Sequence[TimeSeries],
     ):
         # Create the worksheets for keys with multiple values
         worksheet_name = worksheet.name
@@ -107,6 +118,7 @@ class ReportGenerator:
             worksheet_x.write_row(i + 1, column_nr, item.times)
             worksheet_y.write_row(i + 1, column_nr, item.data)
             end_column = xl_col_to_name(len(item.times))
+            negative_value = any(value < 0 for value in item.data)
             worksheet.add_sparkline(
                 i + 1,
                 column_nr,
@@ -114,6 +126,7 @@ class ReportGenerator:
                     "range": f"'{worksheet_y.name}'!$A${i + 2}:${end_column}${i + 2}",
                     "date_axis": f"'{worksheet_x.name}'!$A${i + 2}:${end_column}${i + 2}",
                     "type": "line",
+                    "axis": negative_value,
                 },
             )
 
@@ -153,7 +166,6 @@ class ReportGenerator:
     ):
         for i, item in enumerate(column_data):
             worksheet.write(i + 1, column_nr, item.name)
-            
 
         # Style the column
         worksheet.set_column(column_nr, column_nr, 15)
@@ -187,7 +199,7 @@ class ReportGenerator:
         column_data: list[timedelta],
     ):
         time_format_normal = self.workbook.add_format({"num_format": "[hh]:mm"})
-        time_format_seconds = self.workbook.add_format({"num_format": "[s]\"s\""})
+        time_format_seconds = self.workbook.add_format({"num_format": '[s]"s"'})
         for i, item in enumerate(column_data):
             total_seconds = item.total_seconds()
             if total_seconds < 60:
@@ -195,5 +207,25 @@ class ReportGenerator:
             else:
                 worksheet.write(i + 1, column_nr, item, time_format_normal)
 
+    def write_column_with_notebook_progression_with_datetime_data(
+        self,
+        worksheet: xlsxwriter.Workbook.worksheet_class,
+        column_nr: int,
+        column_name: str,
+        column_data: list[NotebookProgressionWithDatetime],
+    ):
+        # Convert NotebookProgression to TimeSeries
+        timeseries_data = [item.convert_to_notebook_progression() for item in column_data]
+        self.write_column_with_timeseries_data(
+            worksheet, column_nr, column_name, timeseries_data
+        )
+
     def close(self):
-        self.workbook.close()
+        while True:
+            try:
+                self.workbook.close()
+                break
+            except Exception as e:
+                print(f"Error encountered: {e}.")
+                input("Close notebook so it can be saved.")
+                self.close()

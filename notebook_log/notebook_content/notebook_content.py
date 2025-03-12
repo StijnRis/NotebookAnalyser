@@ -27,6 +27,12 @@ class NotebookContent:
         self.nbformat = nbformat
         self.nbformat_minor = nbformat_minor
         self.cells = cells
+    
+    def get_cell_by_id(self, id: int):
+        for cell in self.cells:
+            if cell.id == id:
+                return cell
+        return None
 
     def get_source_as_string(self):
         """

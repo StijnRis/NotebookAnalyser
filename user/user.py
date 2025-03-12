@@ -7,11 +7,11 @@ from notebook_log.notebook_log import NotebookLog
 
 
 class User:
-    def __init__(self, username: str, chat_message_analyser: ChatMessageAnalyser):
+    def __init__(self, username: str, chat_log: ChatLog, notebook_log: NotebookLog, notebook_files: list[str]):
         self.username = username
-        self.chat_log = ChatLog(chat_message_analyser)
-        self.notebook_log = NotebookLog()
-        self.notebook_files = []
+        self.chat_log = chat_log
+        self.notebook_log = notebook_log
+        self.notebook_files = notebook_files
 
     def get_username(self):
         return self.username
@@ -25,17 +25,7 @@ class User:
     def get_notebook_files(self):
         return self.notebook_files
 
-    def load_chat_log_files(self, file_paths: list[str]):
-        for path in file_paths:
-            self.chat_log.load_file(path)
-
-    def load_notebook_log_files(self, file_paths: list[str]):
-        for path in file_paths:
-            self.notebook_log.load_file(path)
-
-    def load_notebook_files(self, file_paths: list[str]):
-        self.notebook_files.extend(file_paths)
-
+    # TODO fix
     def get_cell_activities(self) -> list[CellActivity]:
         activities: list[CellActivity] = []
 

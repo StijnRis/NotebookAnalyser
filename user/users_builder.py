@@ -1,23 +1,28 @@
 import os
 
+from chat_log.chat_log_builder import ChatLogBuilder
+from notebook_log.notebook_log_builder import NotebookLogBuilder
 from user.user import User
 from user.users import Users
 
 
 class UsersBuilder:
 
-    def __init__(self, verbose=False):
-        self.users = {}
+    def __init__(self, chat_message_analyser, verbose=False):
+        self.users_data = {}
+        self.chat_message_analyser = chat_message_analyser
         self.verbose = verbose
+        self.notebook_log_builder = NotebookLogBuilder()
+        self.chat_log_builder = ChatLogBuilder(self.chat_message_analyser)
 
     def get_user_data(self, username: str):
-        if username not in self.users:
-            self.users[username] = {
+        if username not in self.users_data:
+            self.users_data[username] = {
                 "chat_log_file_paths": [],
                 "notebook_log_file_paths": [],
                 "notebook_file_paths": [],
             }
-        return self.users[username]
+        return self.users_data[username]
 
     def load_log_directory(self, log_directory: str):
         if self.verbose:
@@ -57,16 +62,16 @@ class UsersBuilder:
                         elif file_name.endswith(".chat"):
                             user_data["chat_log_file_paths"].append(file_path)
 
-                self.users[username] = user_data
+                self.users_data[username] = user_data
 
     def load_grades(self):
         pass
 
-    def build(self, chat_message_analyser):
-        build_users = Users(chat_message_analyser)
+    def build(self):
+        users = []
 
         # Load data into objects
-        for username, user_data in self.users.items():
+        for username, user_data in self.users_data.items():
             if self.verbose:
                 print(f"Loading user {username}: ")
                 print(f"  {len(user_data['chat_log_file_paths'])} chat log files")
@@ -75,11 +80,18 @@ class UsersBuilder:
                 )
                 print(f"  {len(user_data['notebook_file_paths'])} notebook files")
 
-            user = User(username, chat_message_analyser)
-            user.load_chat_log_files(user_data["chat_log_file_paths"])
-            user.load_notebook_log_files(user_data["notebook_log_file_paths"])
-            user.load_notebook_files(user_data["notebook_file_paths"])
+            self.notebook_log_builder.load_files(user_data["notebook_log_file_paths"])
+            notebook_log = self.notebook_log_builder.build()
 
-            build_users.add_user(user)
+            notebook_files = user_data["notebook_file_paths"]
 
-        return build_users
+            self.chat_log_builder.load_files(user_data["chat_log_file_paths"])
+            chat_log = self.chat_log_builder.build()
+    
+            user = User(username, chat_log, notebook_log, notebook_files)
+
+            users.append(user)
+        
+        self.users_data = {}
+
+        return Users(users)

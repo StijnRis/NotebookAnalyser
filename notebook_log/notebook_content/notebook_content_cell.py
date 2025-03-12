@@ -21,7 +21,7 @@ class NotebookContentCell:
 
     def __init__(
         self,
-        id: Optional[str],
+        id: Optional[int],
         cell_type: str,
         source: str,
         metadata: Dict[str, Any],
@@ -34,3 +34,8 @@ class NotebookContentCell:
         self.metadata = metadata
         self.outputs = outputs
         self.execution_count = execution_count
+    
+    def get_source(self):
+        return self.source
+
+

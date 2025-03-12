@@ -1,5 +1,4 @@
 from chat_log.chat_interaction import ChatInteraction
-from chat_log.chat_message import ChatMessage
 from report.report_generator import ReportGenerator
 from user.user import User
 from user.users import Users
@@ -14,7 +13,6 @@ class InteractionAnalyser:
         self.data = []
 
     def analyze_interaction(self, message: ChatInteraction):
-        print(f"Processing question {message.get_question().id}")
         question = message.get_question().body
         answer = message.get_answer().body
         waiting_time = message.get_waiting_time()
@@ -29,15 +27,10 @@ class InteractionAnalyser:
             }
         )
 
-    def analyze_interactions_of_user(self, user: User):
-        print(f"Processing user {user.username}")
+    def analyse_interactions_of_user(self, user: User):
         messages = user.chat_log.get_interactions()
         for interaction in messages:
             self.analyze_interaction(interaction)
-
-    def analyse_interactions_of_users(self, users: Users):
-        for user in users.get_users():
-            self.analyze_interactions_of_user(user)
 
     def save_result_to_report(self, report: ReportGenerator):
         report.display_data("Interaction Report", self.data)
