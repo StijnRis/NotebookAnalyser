@@ -32,6 +32,7 @@ class NotebookFileActivity(NotebookActivity):
     def get_file_path(self):
         return self.log_entries[0].notebookState.notebookPath
 
+    # TODO merge with cell_activity get content at
     def get_content_at(self, time: datetime):
         """
         Get the notebook content at a certain time.
@@ -50,7 +51,8 @@ class NotebookFileActivity(NotebookActivity):
             if current_notebook_content is not None:
                 notebook_content = current_notebook_content
             else:
-                print(f"Unknown how to parse {entry.eventDetail.eventName} event")
+                pass # TODO handle
+                # print(f"Unknown how to parse {entry.eventDetail.eventName} event")
                 
         assert notebook_content is not None, "Notebook content should be found"
 
@@ -114,10 +116,10 @@ class NotebookFileActivity(NotebookActivity):
                 cells = eventInfo.cells
                 cell_ids = [cell.index for cell in cells]
             else:
-                cell_ids = [eventInfo.index]
-                if cell_ids[0] is None:
+                if eventInfo.index is None:
                     print(f"No cell index found for {event_name}")
                     continue
+                cell_ids = [eventInfo.index]
 
             for cell_id in cell_ids:
                 if cell_id not in cell_index_to_activity:
@@ -125,13 +127,13 @@ class NotebookFileActivity(NotebookActivity):
 
                 cell_index_to_activity[cell_id].append(entry)
 
-        notebook_cell_activities = []
+        notebook_cell_activities: list[NotebookCellActivity] = []
         for cell_id, entries in cell_index_to_activity.items():
-            notebook_cell = self.notebook.get_cell_by_id(cell_id)
-            assert notebook_cell is not None, "Notebook cell not found"
             notebook_cell_activities.append(
-                NotebookCellActivity(notebook_cell, entries)
+                NotebookCellActivity(entries)
             )
+
+        return notebook_cell_activities
     
     def get_visible_periods(self):
         """

@@ -198,7 +198,7 @@ class ReportGenerator:
         column_name: str,
         column_data: list[timedelta],
     ):
-        time_format_normal = self.workbook.add_format({"num_format": "[hh]:mm"})
+        time_format_normal = self.workbook.add_format({"num_format": '[hh]:mm"h"'})
         time_format_seconds = self.workbook.add_format({"num_format": '[s]"s"'})
         for i, item in enumerate(column_data):
             total_seconds = item.total_seconds()

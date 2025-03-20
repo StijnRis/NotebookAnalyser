@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 from notebook_log.notebook_content.notebook_content import NotebookContent
@@ -15,6 +15,7 @@ class NotebookActivity:
         log_entries: List[NotebookLogEntry],
     ):
         self.log_entries = log_entries
+        self.idle_threshold = timedelta(minutes=4)
 
         self.log_entries.sort(key=lambda x: x.eventDetail.eventTime)
 
@@ -53,31 +54,52 @@ class NotebookActivity:
 
         return self.get_end_time() - self.get_start_time()
 
-    def get_editing_time(self):
+    def get_notebook_open_time(self) -> timedelta:
         """
-        Calculate the total time spent actively editing the notebook.
+        Calculate the total time that notebook is open
         """
 
-        active_time = 0
-        last_edit_time = None
+        active_time = timedelta(0)
+        last_time = None
 
         for entry in self.log_entries:
             event_name = entry.eventDetail.eventName
             event_time = entry.eventDetail.eventTime
 
             if event_name in [
-                NotebookEventName.CELL_EDIT,
-                NotebookEventName.NOTEBOOK_VISIBLE,
+                NotebookEventName.NOTEBOOK_OPEN,
             ]:
-                if last_edit_time is not None:
-                    active_time += (event_time - last_edit_time).total_seconds()
-                last_edit_time = event_time
-            elif event_name == NotebookEventName.NOTEBOOK_HIDDEN:
-                last_edit_time = None
+                last_time = None
+
+            if last_time is not None:
+                active_time += event_time - last_time
+
+            last_time = event_time
 
         return active_time
 
-    def get_cell_indexes(self):
+    def get_notebook_usage_time(self) -> timedelta:
+        """
+        Calculate the total time of using the notebook
+        """
+
+        active_time = timedelta(0)
+        last_edit_time = None
+        
+
+        for entry in self.log_entries:
+            event_time = entry.eventDetail.eventTime
+
+            if last_edit_time is not None:
+                time_between = event_time - last_edit_time
+                if time_between <= self.idle_threshold:
+                    active_time += time_between
+
+            last_edit_time = event_time
+
+        return active_time
+
+    def get_cell_indexes(self) -> set[int]:
         """
         Get indexes of the cells which are used in this activity
         """
@@ -97,7 +119,7 @@ class NotebookActivity:
 
         return ids
 
-    def get_cell_ids(self):
+    def get_cell_ids(self) -> set[int]:
         """
         Get ids of cells with indexes found in get cell indexes
         """
@@ -201,7 +223,7 @@ class NotebookActivity:
                 )
 
         return notebook_contents
-    
+
     def get_active_file_at(self, time: datetime):
         """
         Get the active file at a certain time
@@ -234,5 +256,3 @@ class NotebookActivity:
         activities = [NotebookFileActivity(file) for file in files.values()]
 
         return activities
-
-    

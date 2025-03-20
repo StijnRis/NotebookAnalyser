@@ -31,10 +31,6 @@ class Processor:
             InteractionAnalyser(),
         ]
 
-        self.analysers = [
-            EventSequenceAnalysis(),
-        ]
-
         self.load_users()
 
     def load_users(self):

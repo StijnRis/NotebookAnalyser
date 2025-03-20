@@ -39,6 +39,7 @@ class NotebookCellActivity(NotebookActivity):
         assert len(indexes) == 1, "All cells should have the same index"
         return indexes.pop()
 
+    # TODO: This is a copy of the method in NotebookContent. Should be refactored
     def get_content_at(self, time: datetime):
         """
         Get the notebook content at a certain time.
@@ -61,7 +62,8 @@ class NotebookCellActivity(NotebookActivity):
                     if cell.id == cell_id:
                         cell_content = cell
             else:
-                print(f"Unknown how to parse {entry.eventDetail.eventName} event")
+                pass # TODO handle
+                # print(f"Unknown how to parse {entry.eventDetail.eventName} event")
 
         assert cell_content is not None, "No cell content found"
         return cell_content
