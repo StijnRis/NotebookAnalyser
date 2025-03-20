@@ -1,16 +1,16 @@
 from typing import Any, Dict, List, Optional
 
-from notebook_log.notebook_content.notebook_content_output import NotebookContentOutput
+from code_log.code.code import Code
 
 
-class NotebookContentCell:
+class CodeSnippet(Code):
     """
-    A cell in a notebook.
+    A code snippet (cell in a notebook).
     """
 
     @staticmethod
     def load(dict: Dict[str, Any]):
-        return NotebookContentCell(
+        return CodeSnippet(
             dict.get("id", None),
             dict["cell_type"],
             dict["source"],
@@ -25,7 +25,6 @@ class NotebookContentCell:
         cell_type: str,
         source: str,
         metadata: Dict[str, Any],
-        outputs: List[NotebookContentOutput],
         execution_count: Optional[int],
     ):
         self.id = id
@@ -37,5 +36,6 @@ class NotebookContentCell:
     
     def get_source(self):
         return self.source
+
 
 

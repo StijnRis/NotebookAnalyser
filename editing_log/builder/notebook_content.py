@@ -2,8 +2,8 @@ import ast
 from difflib import SequenceMatcher
 from typing import Any, Dict, List
 
-from notebook_log.notebook_content.notebook_content_cell import NotebookContentCell
-from notebook_log.notebook_content.notebook_content_output import NotebookContentOutputType
+from content_log.notebook_content.notebook_content_cell import NotebookContentCell
+from content_log.notebook_content.notebook_content_output import NotebookContentOutputType
 
 
 class NotebookContent:

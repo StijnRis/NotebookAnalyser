@@ -1,7 +1,7 @@
 import os
 
 from chat_log.builder.jupyter_chat_log_builder import ChatLogBuilder
-from notebook_log.notebook_log_builder import NotebookLogBuilder
+from content_log.builder.notebook_log_builder import NotebookLogBuilder
 from user.user import User
 from user.users import Users
 

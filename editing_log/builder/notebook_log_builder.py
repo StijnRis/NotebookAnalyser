@@ -1,6 +1,6 @@
 import json
-from notebook_log.notebook_log import NotebookLog
-from notebook_log.entry.notebook_log_entry import NotebookLogEntry
+from content_log.notebook_log import NotebookLog
+from content_log.builder.notebook_log_entry import NotebookLogEntry
 
 
 class NotebookLogBuilder():

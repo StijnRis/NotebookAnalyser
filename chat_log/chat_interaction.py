@@ -6,8 +6,8 @@ class ChatInteraction(ChatActivity):
     Question of user with response of AI
     """
 
-    def __init__(self, messages, users):
-        super().__init__(messages, users)
+    def __init__(self, messages):
+        super().__init__(messages)
 
     def check_invariants(self):
         super().check_invariants()

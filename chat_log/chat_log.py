@@ -1,7 +1,6 @@
 from chat_log.analyser.chat_message_analyser import ChatMessageAnalyser
 from chat_log.chat_activity import ChatActivity
 from chat_log.chat_message import ChatMessage
-from chat_log.chat_user import ChatUser
 
 
 class ChatLog(ChatActivity):
@@ -12,8 +11,7 @@ class ChatLog(ChatActivity):
     def __init__(
         self,
         messages: list[ChatMessage],
-        users: dict[str, ChatUser],
         chat_message_analyser: ChatMessageAnalyser,
     ):
-        super().__init__(messages, users)
+        super().__init__(messages)
         self.chat_message_analyser = chat_message_analyser

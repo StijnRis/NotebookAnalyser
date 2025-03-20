@@ -2,8 +2,8 @@ from datetime import datetime
 from activity.file_activity import FileActivity
 from chat_log.chat_activity import ChatActivity
 from chat_log.chat_log import ChatLog
-from notebook_log.notebook_log import NotebookLog
-from notebook_log.entry.notebook_log_entry import NotebookEventName
+from content_log.notebook_log import NotebookLog
+from content_log.builder.notebook_log_entry import NotebookEventName
 
 
 class User:

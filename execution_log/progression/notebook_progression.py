@@ -1,6 +1,6 @@
 import numpy as np
 
-from notebook_log.progression.time_series import TimeSeries
+from content_log.progression.time_series import TimeSeries
 
 
 class NotebookProgression(TimeSeries):

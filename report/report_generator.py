@@ -5,10 +5,10 @@ from typing import List, Sequence
 import xlsxwriter
 from xlsxwriter.utility import xl_col_to_name
 
-from notebook_log.progression.notebook_progression_with_datetime import (
+from content_log.progression.notebook_progression_with_datetime import (
     NotebookProgressionWithDatetime,
 )
-from notebook_log.progression.time_series import TimeSeries
+from content_log.progression.time_series import TimeSeries
 
 
 class ReportGenerator:

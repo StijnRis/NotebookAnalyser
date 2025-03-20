@@ -1,10 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
-from enum import Enum
 
 from chat_log.analyser.chat_message_analyser import ChatMessageAnalyser
-from chat_log.chat_user import ChatUser
-
 
 
 class ChatMessage(ABC):
@@ -14,34 +11,27 @@ class ChatMessage(ABC):
 
     def __init__(
         self,
-        chat_message_analyser: ChatMessageAnalyser,
         time: datetime,
         body: str,
-        sender: ChatUser,
-        deleted: bool,
-        edited: bool,
+        chat_message_analyser: ChatMessageAnalyser,
     ):
-        self.chat_message_analyser = chat_message_analyser
-        self.type = type
         self.time = time
         self.body = body
-        self.sender = sender
-        self.deleted = deleted
-        self.edited = edited
+        self.chat_message_analyser = chat_message_analyser
+    
+    def get_time(self):
+        return self.time
+    
+    def get_body(self):
+        return self.body
 
     def get_length(self):
         return len(self.body)
 
     @abstractmethod
-    def is_question(self):
+    def is_question(self) -> bool:
         pass
 
     @abstractmethod
-    def is_answer(self):
+    def is_answer(self) -> bool:
         pass
-
-    def __str__(self):
-        return f"{self.sender} ({self.time}): {self.body}"
-
-
-

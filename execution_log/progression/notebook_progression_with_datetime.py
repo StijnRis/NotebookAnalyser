@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from notebook_log.progression.notebook_progression import NotebookProgression
+from content_log.progression.notebook_progression import NotebookProgression
 
 
 class NotebookProgressionWithDatetime:

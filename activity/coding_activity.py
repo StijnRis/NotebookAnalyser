@@ -1,7 +1,7 @@
 from difflib import SequenceMatcher
 
 from chat_log.chat_activity import ChatActivity
-from notebook_log.notebook_cell_activity import NotebookCellActivity
+from content_log.code_snippet_activity import CodeSnippetActivity
 
 
 class CellActivity:
@@ -11,7 +11,7 @@ class CellActivity:
 
     def __init__(
         self,
-        notebook_activity: NotebookCellActivity,
+        notebook_activity: CodeSnippetActivity,
         chat_activity: ChatActivity,
     ):
         self.notebook_activity = notebook_activity

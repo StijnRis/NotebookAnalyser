@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import List
 
 from chat_log.chat_message import ChatMessage
-from chat_log.chat_user import ChatUser
 
 
 class ChatActivity:
@@ -15,10 +14,8 @@ class ChatActivity:
     def __init__(
         self,
         messages: list[ChatMessage],
-        users: dict[str, ChatUser],
     ):
         self.messages: list[ChatMessage] = messages
-        self.users: dict[str, ChatUser] = users
 
         self.messages.sort(key=lambda x: x.time)
 
@@ -31,11 +28,11 @@ class ChatActivity:
 
     def get_questions(self):
         messages = [message for message in self.messages if message.is_question()]
-        return ChatActivity(messages, self.users)
+        return ChatActivity(messages)
 
     def get_answers(self):
         messages = [message for message in self.messages if message.is_answer()]
-        return ChatActivity(messages, self.users)
+        return ChatActivity(messages)
 
     def get_amount_of_messages(self):
         return len(self.messages)
@@ -49,43 +46,19 @@ class ChatActivity:
     def get_activity_between(self, start: datetime, end: datetime):
         return ChatActivity(
             [message for message in self.messages if start <= message.time <= end],
-            self.users,
         )
 
-    def get_code_snippets(
-        self, include_questions: bool = True, include_answers: bool = True
-    ):
+    def get_included_code_snippets(self):
         codes: List[str] = []
         for message in self.messages:
-            if (include_questions and message.is_question()) or (
-                include_answers and message.is_answer()
-            ):
-                matches = re.finditer(
-                    r"(\`\`\`python|\`)((.|\n)+?)\`{1,3}", message.body, re.DOTALL
-                )
-                for match in matches:
-                    code_snippet = match.group(2)
-                    codes.append(code_snippet.strip())
+            matches = re.finditer(
+                r"(\`\`\`python|\`)((.|\n)+?)\`{1,3}", message.body, re.DOTALL
+            )
+            for match in matches:
+                code_snippet = match.group(2)
+                codes.append(code_snippet.strip())
 
         return codes
-
-    def get_generated_code_snippets(self):
-        return self.get_code_snippets(False, True)
-
-    def get_send_code_snippets(self):
-        return self.get_code_snippets(True, False)
-
-    def get_list_of_messages(self):
-        messages = []
-        for message in self.messages:
-            if message.is_question():
-                text = f"{self.users[message.sender].name} asked: {message.body}"
-                messages.append(text)
-            elif message.is_answer():
-                text = f"{self.users[message.sender].name} answered: {message.body}"
-                messages.append(text)
-
-        return messages
 
     def get_interactions(self):
         from chat_log.chat_interaction import ChatInteraction  # avoid circular import
@@ -95,7 +68,7 @@ class ChatActivity:
             if self.messages[i].is_question() and self.messages[i + 1].is_answer():
                 interactions.append(
                     ChatInteraction(
-                        [self.messages[i], self.messages[i + 1]], self.users
+                        [self.messages[i], self.messages[i + 1]]
                     )
                 )
 

@@ -1,7 +1,6 @@
 from datetime import datetime
 from chat_log.analyser.chat_message_analyser import ChatMessageAnalyser
 from chat_log.chat_message import ChatMessage
-from chat_log.chat_user import ChatUser
 
 
 class ChatMessageAnswer(ChatMessage):
@@ -11,13 +10,16 @@ class ChatMessageAnswer(ChatMessage):
 
     def __init__(
         self,
-        chat_message_analyser: ChatMessageAnalyser,
         time: datetime,
         body: str,
-        sender: ChatUser,
-        deleted: bool,
-        edited: bool,
+        chat_message_analyser: ChatMessageAnalyser,
     ):
         super().__init__(
-            chat_message_analyser, time, body, sender, deleted, edited
+            time, body, chat_message_analyser
         )
+
+    def is_question(self):
+        return False
+
+    def is_answer(self):
+        return True

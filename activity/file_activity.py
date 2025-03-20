@@ -1,7 +1,7 @@
 from difflib import SequenceMatcher
 
 from chat_log.chat_activity import ChatActivity
-from notebook_log.notebook_file_activity import NotebookFileActivity
+from content_log.file_activity import FileActivity
 
 
 class FileActivity:
@@ -11,7 +11,7 @@ class FileActivity:
 
     def __init__(
         self,
-        notebook_file_activity: NotebookFileActivity,
+        notebook_file_activity: FileActivity,
         chat_activity: ChatActivity,
     ):
         self.notebook_file_activity = notebook_file_activity
@@ -19,7 +19,7 @@ class FileActivity:
 
     def get_notebook_file_activity(self):
         return self.notebook_file_activity
-    
+
     def get_chat_activity(self):
         return self.chat_activity
 
@@ -47,3 +47,23 @@ class FileActivity:
             similarities.append(SequenceMatcher(None, generated_code, code).ratio())
 
         return similarities
+
+      def get_amount_of_edit_cycles(self):
+        """
+        Get how many times is the program run and then edited
+        """
+
+        total = 0
+        edited = False
+        for entry in self.events:
+            event_name = entry.eventDetail.eventName
+            if event_name == NotebookEventName.CELL_EXECUTE and edited:
+                total += 1
+                edited = False
+            if event_name in [
+                NotebookEventName.CELL_EDIT,
+                NotebookEventName.NOTEBOOK_VISIBLE,
+            ]:
+                edited = True
+
+        return total

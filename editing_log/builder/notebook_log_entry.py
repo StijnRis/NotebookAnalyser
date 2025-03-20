@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
-from notebook_log.notebook_content.notebook_content import NotebookContent
+from content_log.notebook_content.notebook_content import NotebookContent
 
 
 class NotebookCell:

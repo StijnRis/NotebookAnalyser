@@ -1,17 +1,17 @@
 import json
+from datetime import datetime
 from typing import Any
 
 from chat_log.builder.chat_log_builder import ChatLogBuilder
 from chat_log.chat_log import ChatLog
-from chat_log.chat_message import ChatMessage
-from chat_log.chat_user import ChatUser
+from chat_log.chat_message_answer import ChatMessageAnswer
+from chat_log.chat_message_question import ChatMessageQuestion
 
 
 class JupyterChatLogBuilder(ChatLogBuilder):
     def __init__(self, chat_message_analyser):
         self.chat_message_analyser = chat_message_analyser
         self.messages = []
-        self.users = {}
 
     def load_chat_files(self, file_paths: list[str]):
         for file_path in file_paths:
@@ -28,24 +28,25 @@ class JupyterChatLogBuilder(ChatLogBuilder):
         self.load(data)
 
     def load(self, data: dict[str, Any]):
-        messages = [
-            ChatMessage(**msg, chat_message_analyser=self.chat_message_analyser)
-            for msg in data["messages"]
-        ]
-        users = {key: ChatUser(**value) for key, value in data["users"].items()}
+        messages = []
+        for msg in data["messages"]:
+            time = datetime.fromtimestamp(msg["time"])
+            body = msg["body"]
+            automated = msg["automated"]
+            if automated:
+                messages.append(
+                    ChatMessageAnswer(time, body, self.chat_message_analyser)
+                )
+            else:
+                messages.append(
+                    ChatMessageQuestion(time, body, self.chat_message_analyser)
+                )
+
         self.messages.extend(messages)
-        self.users.update(users)
-        # datetime.fromtimestamp(time)
-        if self.automated == True:
-            return False
-        if self.sender == "Juno":
-            return False
-        return True
 
     def build(self):
-        chat_log = ChatLog(self.messages, self.users, self.chat_message_analyser)
+        chat_log = ChatLog(self.messages, self.chat_message_analyser)
 
         self.messages = []
-        self.users = {}
 
         return chat_log

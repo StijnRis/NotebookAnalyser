@@ -1,9 +1,9 @@
 
 from datetime import datetime
 from enum import Enum
+from functools import lru_cache
 from chat_log.analyser.chat_message_analyser import ChatMessageAnalyser
 from chat_log.chat_message import ChatMessage
-from chat_log.chat_user import ChatUser
 
 
 class QuestionPurpose(Enum):
@@ -44,19 +44,24 @@ class ChatMessageQuestion(ChatMessage):
 
     def __init__(
         self,
-        chat_message_analyser: ChatMessageAnalyser,
         time: datetime,
         body: str,
-        sender: ChatUser,
-        deleted: bool,
-        edited: bool,
+        chat_message_analyser: ChatMessageAnalyser,
     ):
         super().__init__(
-            chat_message_analyser, time, body, sender, deleted, edited
+            time, body, chat_message_analyser
         )
 
+    @lru_cache(maxsize=None)
     def get_question_purpose(self):
         return self.chat_message_analyser.get_question_purpose(self)
 
+    @lru_cache(maxsize=None)
     def get_question_type(self):
         return self.chat_message_analyser.get_question_type(self)
+    
+    def is_question(self):
+        return True
+
+    def is_answer(self):
+        return False
