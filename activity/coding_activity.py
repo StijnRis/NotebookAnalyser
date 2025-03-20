@@ -6,7 +6,7 @@ from notebook_log.notebook_cell_activity import NotebookCellActivity
 
 class CellActivity:
     """
-    All chat and notebook logs related to a single cell.
+    All chat and file logs related to a single coding space (for notebooks it is a cell)
     """
 
     def __init__(

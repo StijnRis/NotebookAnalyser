@@ -6,7 +6,7 @@ from notebook_log.notebook_file_activity import NotebookFileActivity
 
 class FileActivity:
     """
-    All chat and notebook logs related to a single file.
+    All chat and file logs related to a single file.
     """
 
     def __init__(

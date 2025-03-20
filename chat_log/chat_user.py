@@ -1,5 +1,7 @@
 from typing import Optional
 
+from chat_log.chat_message import ChatMessage
+
 
 class ChatUser:
     """
@@ -8,22 +10,7 @@ class ChatUser:
 
     def __init__(
         self,
-        initials: str,
-        color: str,
-        name: str,
-        username: str,
-        display_name: str,
-        avatar_url: Optional[str] = None,
+        messages: list[ChatMessage]
     ):
-        self.initials = initials
-        self.color = color
-        self.name = name
-        self.username = username
-        self.display_name = display_name
-        self.avatar_url = avatar_url
+        self.messages = messages
 
-    def get_amount_of_messages(self, messages):
-        return len([msg for msg in messages if msg.sender == self.username])
-
-    def __str__(self):
-        return f"{self.display_name} ({self.username})"

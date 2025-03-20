@@ -6,17 +6,15 @@ from typing import Any, Dict, List, Optional, Union
 from notebook_log.notebook_content.notebook_content import NotebookContent
 
 
-@dataclass
 class NotebookCell:
     @staticmethod
     def load(data: Dict[str, Any]):
         return NotebookCell(data.get("id"), data["index"])
+    
+    def __init__(self, id: Optional[str], index: int):
+        self.id = id
+        self.index = index
 
-    id: Optional[str]
-    index: int
-
-
-@dataclass
 class NotebookKernelError:
     @staticmethod
     def load(data: Dict[str, Any]):
@@ -25,10 +23,12 @@ class NotebookKernelError:
             data["errorValue"],
             data["traceback"],
         )
+    
+    def __init__(self, errorName: str, errorValue: str, traceback: List[str]):
+        self.errorName = errorName
+        self.errorValue = errorValue
+        self.traceback = traceback
 
-    errorName: str
-    errorValue: str
-    traceback: List[str]
 
 
 @dataclass
@@ -95,10 +95,16 @@ class NotebookEventDetail:
             eventTime,
             eventInfo,
         )
+    
+    def __init__(
+        self,
+        eventName: NotebookEventName,
+        eventTime: datetime,
+        eventInfo: Optional[NotebookEventInfo],
+    ):
+        self.eventName = eventName
+        self.eventTime = eventTime
 
-    eventName: NotebookEventName
-    eventTime: datetime
-    eventInfo: Optional[NotebookEventInfo]
 
 
 class NotebookState:
@@ -129,8 +135,6 @@ class NotebookState:
 class NotebookLogEntry:
     @staticmethod
     def load(data: dict[str, Any]):
-        if data["eventDetail"]["eventTime"] == 1731076519969:
-            print("AA")
         eventDetail = NotebookEventDetail.load(data["eventDetail"])
         notebookState = NotebookState.load(data["notebookState"])
 

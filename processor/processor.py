@@ -6,7 +6,7 @@ from analyser.file_activity_analyser import FileActivityAnalyser
 from analyser.interaction_analyser import InteractionAnalyser
 from analyser.question_analyser import QuestionAnalyser
 from analyser.user_analyser import UserAnalyser
-from analyser.user_notebooks_analyser import NotebookAnalyser
+from analyser.user_code_files_analyser import CodeFileAnalyser
 from chat_log.analyser.chatbot_chat_message_analyser import ChatbotChatMessageAnalyser
 from chatbot import Chatbot
 from report.report_generator import ReportGenerator
@@ -24,7 +24,7 @@ class Processor:
 
         self.analysers: list[Analyser] = [
             UserAnalyser(),
-            NotebookAnalyser(),
+            CodeFileAnalyser(),
             EventSequenceAnalysis(),
             FileActivityAnalyser(),
             QuestionAnalyser(),
@@ -53,7 +53,7 @@ class Processor:
 
     def run(self):
         file_path = "output/users_analyser.xlsx"
-        report_generator = ReportGenerator(file_path)        
+        report_generator = ReportGenerator(file_path)
 
         # Analyze users
         amount_of_users = len(self.users.get_users())

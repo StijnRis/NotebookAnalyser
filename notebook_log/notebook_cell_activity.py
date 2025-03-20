@@ -4,7 +4,7 @@ from typing import List
 
 from notebook_log.notebook_activity import NotebookActivity
 from notebook_log.notebook_content.notebook_content_cell import NotebookContentCell
-from notebook_log.notebook_log_entry import NotebookLogEntry
+from notebook_log.entry.notebook_log_entry import NotebookLogEntry
 
 
 class NotebookCellActivity(NotebookActivity):

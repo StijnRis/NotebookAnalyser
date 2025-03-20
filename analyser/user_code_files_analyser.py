@@ -2,7 +2,7 @@ from analyser.analyser import Analyser
 from user.user import User
 
 
-class NotebookAnalyser(Analyser):
+class CodeFileAnalyser(Analyser):
     """
     Generate report of user notebook
     """

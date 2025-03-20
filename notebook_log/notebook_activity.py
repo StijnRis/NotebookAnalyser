@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 
 from notebook_log.notebook_content.notebook_content import NotebookContent
-from notebook_log.notebook_log_entry import NotebookEventName, NotebookLogEntry
+from notebook_log.entry.notebook_log_entry import NotebookEventName, NotebookLogEntry
 
 
 class NotebookActivity:
@@ -146,15 +146,7 @@ class NotebookActivity:
                 total += 1
 
         return total
-
-    def get_amount_of_events(self):
-        return len(self.log_entries)
-
-    def get_event_by_index(self, index: int) -> Optional[NotebookLogEntry]:
-        if 0 <= index < len(self.log_entries):
-            return self.log_entries[index]
-        return None
-
+    
     def get_amount_of_runtime_errors(self):
         total = 0
         for entry in self.log_entries:
@@ -166,6 +158,28 @@ class NotebookActivity:
                     total += 1
 
         return total
+    
+    def get_execution_results(self) -> List[tuple[datetime, bool]]:
+        """
+        Returns a list of tuples with the event time and execution result (success or failure).
+        """
+        results = []
+        for entry in self.log_entries:
+            if entry.eventDetail.eventName == NotebookEventName.CELL_EXECUTE:
+                event_time = entry.eventDetail.eventTime
+                event_info = entry.eventDetail.eventInfo
+                assert event_info is not None, "eventInfo should not be None"
+                success = event_info.success
+                results.append((event_time, success))
+        return results
+
+    def get_amount_of_events(self):
+        return len(self.log_entries)
+
+    def get_event_by_index(self, index: int) -> Optional[NotebookLogEntry]:
+        if 0 <= index < len(self.log_entries):
+            return self.log_entries[index]
+        return None
 
     def get_amount_of_tab_switches(self):
         total = 0

@@ -1,6 +1,6 @@
 import os
 
-from chat_log.chat_log_builder import ChatLogBuilder
+from chat_log.builder.jupyter_chat_log_builder import ChatLogBuilder
 from notebook_log.notebook_log_builder import NotebookLogBuilder
 from user.user import User
 from user.users import Users
@@ -35,7 +35,7 @@ class UsersBuilder:
 
             if os.path.isfile(path) and valid_file:
                 # Add notebook log file path to user
-                username = file_name.replace("jupyter-", "").replace("-log", "")                
+                username = file_name.replace("jupyter-", "").replace("-log", "")
                 user_data = self.get_user_data(username)
                 user_data["notebook_log_file_paths"].append(path)
 
@@ -85,13 +85,15 @@ class UsersBuilder:
 
             notebook_files = user_data["notebook_file_paths"]
 
-            self.chat_log_builder.load_files(user_data["chat_log_file_paths"])
+            self.chat_log_builder.load_jupyter_chat_files(
+                user_data["chat_log_file_paths"]
+            )
             chat_log = self.chat_log_builder.build()
-    
+
             user = User(username, chat_log, notebook_log, notebook_files)
 
             users.append(user)
-        
+
         self.users_data = {}
 
         return Users(users)

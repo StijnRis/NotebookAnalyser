@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from typing import List, Optional
+from typing import List
 
 from chat_log.chat_message import ChatMessage
 from chat_log.chat_user import ChatUser
@@ -43,7 +43,7 @@ class ChatActivity:
     def get_messages_length(self):
         length = 0
         for message in self.messages:
-            length += message.get_message_length()
+            length += message.get_length()
         return length
 
     def get_activity_between(self, start: datetime, end: datetime):
@@ -112,4 +112,3 @@ class ChatActivity:
             elif message.is_answer():
                 sequence.append((message.time, "Answer"))
         return sequence
-
