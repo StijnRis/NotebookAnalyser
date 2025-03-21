@@ -1,4 +1,4 @@
-class Code:
+class SourceCode:
     def __init__(self, code):
         self.code = code
     

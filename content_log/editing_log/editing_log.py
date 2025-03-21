@@ -1,21 +1,17 @@
-from datetime import timedelta
-from typing import List, Optional
+from datetime import datetime, timedelta
+from typing import List
 
-from editing_log.content_event import (
-    ContentEvent,
-    FileHiddenEvent,
-    FileVisibleEvent,
-)
+from editing_log.editing_event import EditingEvent, FileHiddenEvent, FileVisibleEvent
 
 
-class EditingContentActivity:
+class EditingLog:
     """
-    A collection of content events
+    A collection of editing events
     """
 
     def __init__(
         self,
-        events: List[ContentEvent],
+        events: List[EditingEvent],
     ):
         self.events = events
         self.idle_threshold = timedelta(minutes=4)
@@ -50,9 +46,9 @@ class EditingContentActivity:
 
         return self.get_end_time() - self.get_start_time()
 
-    def get_file_open_time(self) -> timedelta:
+    def get_open_time(self) -> timedelta:
         """
-        Calculate the total time of having the file open
+        Calculate the total time of having a file open
         """
 
         active_time = timedelta(0)
@@ -71,9 +67,9 @@ class EditingContentActivity:
 
         return active_time
 
-    def get_file_usage_time(self) -> timedelta:
+    def get_total_editing_time(self) -> timedelta:
         """
-        Calculate the total time of using the file
+        Calculate the total time of editing
         """
 
         active_time = timedelta(0)
@@ -91,13 +87,32 @@ class EditingContentActivity:
 
         return active_time
 
+    def get_editing_periods(self) -> list[tuple[datetime, datetime]]:
+        """
+        Get the start and end times of every period of editing activity.
+        """
+        visible_periods: list[tuple[datetime, datetime]] = []
+        start_time = None
+
+        for entry in self.events:
+
+            if isinstance(entry, FileVisibleEvent):
+                if start_time is None:
+                    start_time = entry.get_time()
+            elif isinstance(entry, FileHiddenEvent):
+                if start_time is not None:
+                    end_time = entry.get_time()
+                    visible_periods.append((start_time, end_time))
+                    start_time = None
+
+        # If the notebook is still visible at the end of the log
+        if start_time is not None:
+            visible_periods.append((start_time, self.events[-1].get_time()))
+
+        return visible_periods
+
     def get_amount_of_events(self):
         return len(self.events)
-
-    def get_event_by_index(self, index: int) -> Optional[ContentEvent]:
-        if 0 <= index < len(self.events):
-            return self.events[index]
-        return None
 
     def get_amount_of_tab_switches(self):
         total = 0

@@ -1,6 +1,13 @@
-class FileLog:
-    def __init__(self):
-        pass
+from content_log.code.code_version_manager import CodeVersionManager
+from content_log.content_log import ContentLog
+from execution_log.execution_log import ExecutionLog
+from content_log.editing_log.editing_file_log import EditingFileLog
+from content_log.editing_log.editing_log import EditingLog
+
+
+class FileLog(ContentLog):
+    def __init__(self, editing_log: EditingFileLog, code_version_manager: CodeVersionManager):
+        super().__init__(editing_log, code_version_manager)
 
     def get_all_saved_notebook_contents(self):
         """
