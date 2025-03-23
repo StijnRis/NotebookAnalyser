@@ -1,9 +1,6 @@
 from abc import ABC
 from datetime import datetime
 
-from file_log.code.source_code import SourceCode
-
-
 class EditingEvent(ABC):
     def __init__(self, event_time: datetime):
         self.event_time = event_time

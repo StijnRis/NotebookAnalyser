@@ -1,125 +1,118 @@
-from content_log.code.code_version_manager import CodeVersionManager
-from content_log.content_log import ContentLog
-from execution_log.execution_log import ExecutionLog
-from content_log.editing_log.editing_file_log import EditingFileLog
+from datetime import datetime
+from functools import lru_cache
+
+from content_log.code.file_versions_log import CodeVersionsLog
 from content_log.editing_log.editing_log import EditingLog
+from content_log.execution_log.file_execution_log import FileExecutionLog
+from content_log.progression.progression_with_datetime import ProgressionWithDatetime
 
 
-class FileLog(ContentLog):
-    def __init__(self, editing_log: EditingFileLog, code_version_manager: CodeVersionManager):
-        super().__init__(editing_log, code_version_manager)
+class FileLog:
+    def __init__(
+        self,
+        path: str,
+        editing_log: EditingLog,
+        code_version_log: CodeVersionsLog,
+        file_execution_log: FileExecutionLog,
+    ):
+        self.path = path
+        self.editing_log = editing_log
+        self.code_version_log = code_version_log
+        self.file_execution_log = file_execution_log
 
-    def get_all_saved_notebook_contents(self):
-        """
-        Returns a list of tuples with the event time and notebook content.
-        """
-        notebook_contents: List[tuple[datetime, NotebookContent]] = []
-        for entry in self.events:
-            if entry.notebookState.notebookContent is not None:
-                notebook_contents.append(
-                    (entry.eventDetail.eventTime, entry.notebookState.notebookContent)
-                )
+    def get_path(self) -> str:
+        return self.path
 
-        return notebook_contents
-    
-        # TODO: This is a copy of the method in NotebookContent. Should be refactored
-    def get_content_at(self, time: datetime):
-        """
-        Get the notebook content at a certain time.
-        """
-        cell_content = None
-        cell_id = self.get_cell_id()
+    def get_editing_log(self) -> EditingLog:
+        return self.editing_log
 
-        # Loop through all events
-        for entry in self.events:
+    def get_code_version_log(self) -> CodeVersionsLog:
+        return self.code_version_log
 
-            # Check if this event happened
-            if entry.eventDetail.eventTime > time:
-                continue
+    def get_file_execution_log(self) -> FileExecutionLog:
+        return self.file_execution_log
 
-            # Check if entire notebook is saved
-            current_notebook_content = entry.notebookState.notebookContent
-            if current_notebook_content is not None:
-                cells = current_notebook_content.cells
-                for cell in cells:
-                    if cell.id == cell_id:
-                        cell_content = cell
-            else:
-                pass  # TODO handle
-                # print(f"Unknown how to parse {entry.eventDetail.eventName} event")
+    def get_start_time(self) -> datetime:
+        time1 = self.editing_log.get_start_time()
+        time2 = self.code_version_log.get_start_time()
+        time3 = self.file_execution_log.get_start_time()
 
-        assert cell_content is not None, "No cell content found"
-        return cell_content
+        return max(time1, time2, time3)
 
-    def get_similarity_between_cell_states(self, time1: datetime, time2: datetime):
-        end_result = self.get_content_at(time1).get_source()
-        current_result = self.get_content_at(time2).get_source()
-        return SequenceMatcher(None, end_result, current_result).ratio()
-    
-    # TODO merge with cell_activity get content at
-    def get_content_at(self, time: datetime):
-        """
-        Get the notebook content at a certain time.
-        """
-        notebook_content = None
+    def get_end_time(self) -> datetime:
+        time1 = self.editing_log.get_end_time()
+        time2 = self.code_version_log.get_end_time()
+        time3 = self.file_execution_log.get_end_time()
 
-        # Loop through all events
-        for entry in self.events:
-            current_notebook_content = entry.notebookState.notebookContent
-
-            # Check if this event happened
-            if entry.eventDetail.eventTime > time:
-                continue
-
-            # Check if entire notebook is saved
-            if current_notebook_content is not None:
-                notebook_content = current_notebook_content
-            else:
-                pass  # TODO handle
-                # print(f"Unknown how to parse {entry.eventDetail.eventName} event")
-
-        assert notebook_content is not None, "Notebook content should be found"
-
-        return notebook_content
+        return max(time1, time2, time3)
 
     @lru_cache(maxsize=None)
-    def get_progressions(self):
-        """
-        Calculate the progression of the notebook
-        """
-        saved_contents = self.get_all_saved_notebook_contents()
+    def get_ast_progression(self):
+        files = self.get_code_version_log().get_code_files()
 
         times: list[datetime] = []
         ast_progression: list[float] = []
-        output_progression: list[float] = []
+
+        # Check if user has saved any notebook content
+        if len(files) == 0:
+            return ProgressionWithDatetime(times, ast_progression)
+
+        last_file = files[-1]
+
+        for file in files:
+            ast_difference = file.get_ast_difference_ratio(last_file)
+
+            times.append(file.get_time())
+            ast_progression.append(ast_difference)
+
+        return ProgressionWithDatetime(times, ast_progression)
+
+    @lru_cache(maxsize=None)
+    def get_code_progression(self):
+        saved_workspaces = self.get_code_version_log().get_code_files()
+
+        times: list[datetime] = []
         code_progression: list[float] = []
 
         # Check if user has saved any notebook content
-        if len(saved_contents) == 0:
-            return (
-                NotebookProgressionWithDatetime(times, ast_progression),
-                NotebookProgressionWithDatetime(times, output_progression),
-                NotebookProgressionWithDatetime(times, code_progression),
-            )
+        if len(saved_workspaces) == 0:
+            return ProgressionWithDatetime(times, code_progression)
 
-        last_notebook_content = saved_contents[-1][1]
+        last_workspace = saved_workspaces[-1]
 
-        for event_time, content in saved_contents:
-            ast_difference = content.get_ast_difference_ratio(last_notebook_content)
+        for workspace in saved_workspaces:
+            code_difference = workspace.get_code_difference_ratio(last_workspace)
 
-            output_difference = content.get_output_difference_ratio(
-                last_notebook_content
-            )
-
-            code_difference = content.get_code_difference_ratio(last_notebook_content)
-
-            times.append(event_time)
-            ast_progression.append(ast_difference)
-            output_progression.append(output_difference)
+            times.append(workspace.get_time())
             code_progression.append(code_difference)
 
-        return (
-            NotebookProgressionWithDatetime(times, ast_progression),
-            NotebookProgressionWithDatetime(times, output_progression),
-            NotebookProgressionWithDatetime(times, code_progression),
-        )
+        return ProgressionWithDatetime(times, code_progression)
+
+    @lru_cache(maxsize=None)
+    def get_output_progression(self):
+        execution_outputs = self.get_file_execution_log().get_execution_outputs()
+
+        times: list[datetime] = []
+        output_progression: list[float] = []
+
+        # Check if user has saved any notebook content
+        if len(execution_outputs) == 0:
+            return ProgressionWithDatetime(times, output_progression)
+
+        last_execution_output = execution_outputs[-1]
+
+        for execution_output in execution_outputs:
+            output_similarity = execution_output.get_output_similarity_ratio(
+                last_execution_output
+            )
+
+            times.append(execution_output.get_time())
+            output_progression.append(output_similarity)
+
+        return ProgressionWithDatetime(times, output_progression)
+
+    def get_event_sequence(self) -> list[tuple[datetime, str]]:
+        editing_sequence = self.editing_log.get_event_sequence()
+        execution_sequence = self.file_execution_log.get_event_sequence()
+
+        return editing_sequence + execution_sequence

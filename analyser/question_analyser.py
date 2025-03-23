@@ -1,10 +1,8 @@
 from datetime import timedelta
 
 from analyser.analyser import Analyser
-from chat_log.chat_message import ChatMessage
-from report.report_generator import ReportGenerator
+from chat_log.chat_message_question import ChatMessageQuestion
 from user.user import User
-from user.users import Users
 
 
 class QuestionAnalyser(Analyser):
@@ -15,18 +13,15 @@ class QuestionAnalyser(Analyser):
     def __init__(self):
         super().__init__()
 
-    def analyze_message(self, user: User, message: ChatMessage):
-        body = message.body
-        purpose = message.get_question_purpose()
-        question_type = message.get_question_type()
-        time = message.time
-        active_notebook = user.get_notebook_log().get_active_file_at(time)
-        ast_progression, output_progression, code_progression = (
-            active_notebook.get_progressions()
-        )
-        output_progression_working_time = (
-            output_progression.convert_to_notebook_progression().remove_idle_time()
-        )
+    def analyze_message_question(
+        self, user: User, message_question: ChatMessageQuestion
+    ):
+        body = message_question.body
+        purpose = message_question.get_question_purpose()
+        question_type = message_question.get_question_type()
+        time = message_question.time
+        active_notebook = user.get_workspace_log().get_active_file_at(time)
+        output_progression = active_notebook.get_output_progression()
 
         current_output_progression = output_progression.get_progression_at(time)
         output_progression_in_10_minutes = output_progression.get_progression_at(
@@ -46,4 +41,4 @@ class QuestionAnalyser(Analyser):
     def analyse_user(self, user: User):
         messages = user.chat_log.get_questions().messages
         for question in messages:
-            self.analyze_message(user, question)
+            self.analyze_message_question(user, question)

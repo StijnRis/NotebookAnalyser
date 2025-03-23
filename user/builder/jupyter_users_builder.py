@@ -1,19 +1,19 @@
 import os
 
-from chat_log.builder.jupyter_chat_log_builder import ChatLogBuilder
-from content_log.builder.notebook_log_builder import NotebookLogBuilder
+from chat_log.builder.jupyter_chat_log_builder import JupyterChatLogBuilder
+from content_log.builder.jupyter_content_log_builder import JupyterWorkspaceLogBuilder
 from user.user import User
 from user.users import Users
 
 
-class UsersBuilder:
+class JupyterUsersBuilder:
 
     def __init__(self, chat_message_analyser, verbose=False):
         self.users_data = {}
         self.chat_message_analyser = chat_message_analyser
         self.verbose = verbose
-        self.notebook_log_builder = NotebookLogBuilder()
-        self.chat_log_builder = ChatLogBuilder(self.chat_message_analyser)
+        self.workspace_log_builder = JupyterWorkspaceLogBuilder()
+        self.chat_log_builder = JupyterChatLogBuilder(self.chat_message_analyser)
 
     def get_user_data(self, username: str):
         if username not in self.users_data:
@@ -80,17 +80,15 @@ class UsersBuilder:
                 )
                 print(f"  {len(user_data['notebook_file_paths'])} notebook files")
 
-            self.notebook_log_builder.load_files(user_data["notebook_log_file_paths"])
-            notebook_log = self.notebook_log_builder.build()
+            self.workspace_log_builder.load_files(user_data["notebook_log_file_paths"])
+            workspace_log = self.workspace_log_builder.build()
 
             notebook_files = user_data["notebook_file_paths"]
 
-            self.chat_log_builder.load_jupyter_chat_files(
-                user_data["chat_log_file_paths"]
-            )
+            self.chat_log_builder.load_files(user_data["chat_log_file_paths"])
             chat_log = self.chat_log_builder.build()
 
-            user = User(username, chat_log, notebook_log, notebook_files)
+            user = User(username, chat_log, workspace_log, notebook_files)
 
             users.append(user)
 

@@ -27,11 +27,3 @@ class ChatMessage(ABC):
 
     def get_length(self):
         return len(self.body)
-
-    @abstractmethod
-    def is_question(self) -> bool:
-        pass
-
-    @abstractmethod
-    def is_answer(self) -> bool:
-        pass

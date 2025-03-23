@@ -19,9 +19,11 @@ class FileActivityAnalyser(Analyser):
                 "Username": username,
                 "Used ai codes": ",".join(file_activity.get_used_ai_code()),
                 "Similarities with AI": ",".join(
-                    str(file_activity.get_similarities_between_ai_code_and_cell(
-                        file_activity.get_notebook_file_activity().get_end_time()
-                    ))
+                    str(
+                        file_activity.get_similarities_between_ai_code_and_cell(
+                            file_activity.get_file_log().get_end_time()
+                        )
+                    )
                 ),
             }
 

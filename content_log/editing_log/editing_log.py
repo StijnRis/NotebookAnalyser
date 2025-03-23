@@ -1,7 +1,13 @@
 from datetime import datetime, timedelta
 from typing import List
 
-from editing_log.editing_event import EditingEvent, FileHiddenEvent, FileVisibleEvent
+from content_log.editing_log.editing_event import (
+    EditEvent,
+    EditingEvent,
+    ExecuteEvent,
+    FileHiddenEvent,
+    FileVisibleEvent,
+)
 
 
 class EditingLog:
@@ -27,17 +33,22 @@ class EditingLog:
                 self.events[i].get_time() >= self.events[i - 1].get_time()
             ), "Log entries should be sorted by event time"
 
+    def get_events(self):
+        return self.events
+
     def get_start_time(self):
         for entry in self.events:
             if not isinstance(entry, (FileVisibleEvent, FileHiddenEvent)):
                 return entry.get_time()
-        assert False, "No event found"
+        print("No start time found")
+        return datetime.fromtimestamp(0)
 
     def get_end_time(self):
         for entry in reversed(self.events):
             if not isinstance(entry, (FileVisibleEvent, FileHiddenEvent)):
                 return entry.get_time()
-        assert False, "No event found"
+        print("No end time found")
+        return datetime.fromtimestamp(0)
 
     def get_completion_time(self):
         """
@@ -128,3 +139,19 @@ class EditingLog:
         """
 
         return [(entry.get_time(), entry.__class__.__name__) for entry in self.events]
+
+    def get_amount_of_edit_cycles(self):
+        """
+        Get how many times is the program run and then edited
+        """
+
+        total = 0
+        edited = False
+        for entry in self.events:
+            if isinstance(entry, ExecuteEvent) and edited:
+                total += 1
+                edited = False
+            if isinstance(entry, EditEvent):
+                edited = True
+
+        return total

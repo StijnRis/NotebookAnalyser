@@ -1,9 +1,9 @@
 from datetime import datetime
+
 from activity.file_activity import FileActivity
 from chat_log.chat_activity import ChatActivity
 from chat_log.chat_log import ChatLog
-from content_log.notebook_log import NotebookLog
-from content_log.builder.notebook_log_entry import NotebookEventName
+from content_log.workspace_log import WorkspaceLog
 
 
 class User:
@@ -11,12 +11,12 @@ class User:
         self,
         username: str,
         chat_log: ChatLog,
-        notebook_log: NotebookLog,
+        workspace_log: WorkspaceLog,
         notebook_files: list[str],
     ):
         self.username = username
         self.chat_log = chat_log
-        self.notebook_log = notebook_log
+        self.workspace_log = workspace_log
         self.notebook_files = notebook_files
 
     def get_username(self):
@@ -25,8 +25,8 @@ class User:
     def get_chat_log(self):
         return self.chat_log
 
-    def get_notebook_log(self):
-        return self.notebook_log
+    def get_workspace_log(self):
+        return self.workspace_log
 
     def get_notebook_files(self):
         return self.notebook_files
@@ -34,19 +34,18 @@ class User:
     def get_file_activities(self):
         activities: list[FileActivity] = []
 
-        notebook_file_activities = self.notebook_log.split_by_file()
-        for notebook_activity in notebook_file_activities:
+        file_logs = self.workspace_log.get_file_logs()
+        for file_log in file_logs:
             messages = []
             users = {}
-            for start_time, end_time in notebook_activity.get_visible_periods():
+            for start_time, end_time in file_log.get_editing_log().get_editing_periods():
                 activity = self.chat_log.get_activity_between(
                     start_time,
                     end_time,
                 )
                 messages.extend(activity.messages)
-                users.update(activity.users)
             activities.append(
-                FileActivity(notebook_activity, ChatActivity(messages, users))
+                FileActivity(file_log, ChatActivity(messages))
             )
 
         return activities
@@ -57,8 +56,8 @@ class User:
         """
 
         sequence: list[tuple[datetime, str]] = []
-        sequence1 = self.notebook_log.get_event_sequence()
-        sequence.extend([(time, event_name.value) for time, event_name in sequence1])
+        sequence1 = self.workspace_log.get_event_sequence()
+        sequence.extend(sequence1)
         sequence2 = self.chat_log.get_event_sequence()
         sequence.extend(sequence2)
         sequence.sort(key=lambda x: x[0])

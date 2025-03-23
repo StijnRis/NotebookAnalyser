@@ -5,9 +5,10 @@ from chat_log.chat_log import ChatLog
 
 
 class ChatLogBuilder(ABC):
-    @abstractmethod
+
     def load_files(self, file_paths: List[str]) -> None:
-        pass
+        for file_path in file_paths:
+            self.load_file(file_path)
 
     @abstractmethod
     def load_file(self, file_path: str) -> None:

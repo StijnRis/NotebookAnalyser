@@ -14,11 +14,11 @@ class UserAnalyser(Analyser):
         user_data = {
             "Username": user.username,
             "Message Count": user.get_chat_log().get_amount_of_messages(),
-            "Notebook open Time": user.get_notebook_log().get_notebook_open_time(),
-            "Notebook usage Time": user.get_notebook_log().get_notebook_usage_time(),
-            "Tab switches": user.get_notebook_log().get_amount_of_tab_switches(),
-            "Executions": user.get_notebook_log().get_amount_of_executions(),
-            "Runtime errors": user.get_notebook_log().get_amount_of_runtime_errors(),
+            # "Notebook open Time": user.get_workspace_log().get_notebook_open_time(),
+            # "Notebook usage Time": user.get_workspace_log().get_notebook_usage_time(),
+            # "Tab switches": user.get_workspace_log().get_amount_of_tab_switches(),
+            # "Executions": user.get_workspace_log().get_amount_of_executions(),
+            # "Runtime errors": user.get_workspace_log().get_amount_of_runtime_errors(),
         }
 
         self.data.append(user_data)

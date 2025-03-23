@@ -1,5 +1,6 @@
 from chat_log.analyser.chat_message_analyser import ChatMessageAnalyser
-from chat_log.chat_message import ChatMessage, QuestionPurpose, QuestionType
+from chat_log.chat_message import ChatMessage
+from chat_log.chat_message_question import QuestionPurpose, QuestionType
 from chatbot import Chatbot
 
 

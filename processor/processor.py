@@ -10,7 +10,7 @@ from analyser.user_code_files_analyser import CodeFileAnalyser
 from chat_log.analyser.chatbot_chat_message_analyser import ChatbotChatMessageAnalyser
 from chatbot import Chatbot
 from report.report_generator import ReportGenerator
-from user.users_builder import UsersBuilder
+from user.builder.jupyter_users_builder import JupyterUsersBuilder
 
 
 class Processor:
@@ -46,7 +46,7 @@ class Processor:
 
         data_location = small_sample_data_location
 
-        builder = UsersBuilder(self.chat_message_analyser, verbose=True)
+        builder = JupyterUsersBuilder(self.chat_message_analyser, verbose=True)
         builder.load_log_directory(data_location[0])
         builder.load_volumes_directory(data_location[1])
         self.users = builder.build()

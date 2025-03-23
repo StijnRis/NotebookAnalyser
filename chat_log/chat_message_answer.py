@@ -17,9 +17,3 @@ class ChatMessageAnswer(ChatMessage):
         super().__init__(
             time, body, chat_message_analyser
         )
-
-    def is_question(self):
-        return False
-
-    def is_answer(self):
-        return True

@@ -59,9 +59,3 @@ class ChatMessageQuestion(ChatMessage):
     @lru_cache(maxsize=None)
     def get_question_type(self):
         return self.chat_message_analyser.get_question_type(self)
-    
-    def is_question(self):
-        return True
-
-    def is_answer(self):
-        return False

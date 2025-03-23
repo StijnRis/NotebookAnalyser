@@ -5,9 +5,9 @@ from typing import List, Sequence
 import xlsxwriter
 from xlsxwriter.utility import xl_col_to_name
 
-from content_log.progression.notebook_progression_with_datetime import (
-    NotebookProgressionWithDatetime,
-)
+
+from content_log.progression.progression_with_datetime import ProgressionWithDatetime
+from content_log.progression.progression_with_timedelta import ProgressionWithTimedelta
 from content_log.progression.time_series import TimeSeries
 
 
@@ -76,7 +76,11 @@ class ReportGenerator:
                 self.write_column_with_timeseries_data(
                     worksheet, keys.index(key), key, column_data
                 )
-            elif isinstance(data[0][key], NotebookProgressionWithDatetime):
+            elif isinstance(data[0][key], ProgressionWithTimedelta):
+                self.write_column_with_notebook_progression_with_timedelta_data(
+                    worksheet, keys.index(key), key, column_data
+                )
+            elif isinstance(data[0][key], ProgressionWithDatetime):
                 self.write_column_with_notebook_progression_with_datetime_data(
                     worksheet, keys.index(key), key, column_data
                 )
@@ -106,8 +110,8 @@ class ReportGenerator:
     ):
         # Create the worksheets for keys with multiple values
         worksheet_name = worksheet.name
-        x_name = f"y {worksheet_name} - {column_name}"[:31]
-        Y_name = f"x {worksheet_name} - {column_name}"[:31]
+        x_name = f"x {worksheet_name} - {column_name}"[:31]
+        Y_name = f"y {worksheet_name} - {column_name}"[:31]
         worksheet_x = self.workbook.add_worksheet(x_name)
         worksheet_x.hide()
         worksheet_y = self.workbook.add_worksheet(Y_name)
@@ -115,8 +119,8 @@ class ReportGenerator:
 
         # Save data
         for i, item in enumerate(column_data):
-            worksheet_x.write_row(i + 1, column_nr, item.times)
-            worksheet_y.write_row(i + 1, column_nr, item.data)
+            worksheet_x.write_row(i + 1, 0, item.times)
+            worksheet_y.write_row(i + 1, 0, item.data)
             end_column = xl_col_to_name(len(item.times))
             negative_value = any(value < 0 for value in item.data)
             worksheet.add_sparkline(
@@ -198,24 +202,40 @@ class ReportGenerator:
         column_name: str,
         column_data: list[timedelta],
     ):
-        time_format_normal = self.workbook.add_format({"num_format": '[hh]:mm"h"'})
         time_format_seconds = self.workbook.add_format({"num_format": '[s]"s"'})
+        time_format_minutes = self.workbook.add_format({"num_format": '[m]"m"'})
+        time_format_hours = self.workbook.add_format({"num_format": '[h]"h"'})
         for i, item in enumerate(column_data):
             total_seconds = item.total_seconds()
             if total_seconds < 60:
                 worksheet.write(i + 1, column_nr, item, time_format_seconds)
+            elif total_seconds < 3600:
+                worksheet.write(i + 1, column_nr, item, time_format_minutes)
             else:
-                worksheet.write(i + 1, column_nr, item, time_format_normal)
+                worksheet.write(i + 1, column_nr, item, time_format_hours)
+    
+    def write_column_with_notebook_progression_with_timedelta_data(
+        self,
+        worksheet: xlsxwriter.Workbook.worksheet_class,
+        column_nr: int,
+        column_name: str,
+        column_data: list[ProgressionWithTimedelta],
+    ):
+        # Convert NotebookProgression to TimeSeries
+        timeseries_data = [item.convert_to_time_series() for item in column_data]
+        self.write_column_with_timeseries_data(
+            worksheet, column_nr, column_name, timeseries_data
+    )
 
     def write_column_with_notebook_progression_with_datetime_data(
         self,
         worksheet: xlsxwriter.Workbook.worksheet_class,
         column_nr: int,
         column_name: str,
-        column_data: list[NotebookProgressionWithDatetime],
+        column_data: list[ProgressionWithDatetime],
     ):
         # Convert NotebookProgression to TimeSeries
-        timeseries_data = [item.convert_to_notebook_progression() for item in column_data]
+        timeseries_data = [item.convert_to_progression_with_timedelta().convert_to_time_series() for item in column_data]
         self.write_column_with_timeseries_data(
             worksheet, column_nr, column_name, timeseries_data
         )

@@ -1,4 +1,6 @@
 from chat_log.chat_activity import ChatActivity
+from chat_log.chat_message_answer import ChatMessageAnswer
+from chat_log.chat_message_question import ChatMessageQuestion
 
 
 class ChatInteraction(ChatActivity):
@@ -13,19 +15,23 @@ class ChatInteraction(ChatActivity):
         super().check_invariants()
 
         # Check if the first message is a question
-        assert self.messages[0].is_question(), "First message should be a question"
+        assert isinstance(self.messages[0], ChatMessageQuestion), "First message should be a question"
 
         # Check if the second message is an answer
-        assert self.messages[1].is_answer(), "Second message should be an answer"
+        assert isinstance(self.messages[1], ChatMessageAnswer), "Second message should be an answer"
 
         # Check if there are only two messages
         assert len(self.messages) == 2, "There should be only two messages"
     
-    def get_question(self):
-        return self.messages[0]
+    def get_question(self) -> ChatMessageQuestion:
+        message = self.messages[0]
+        assert isinstance(message, ChatMessageQuestion)
+        return message
     
-    def get_answer(self):
-        return self.messages[1]
+    def get_answer(self) -> ChatMessageAnswer:
+        message = self.messages[1]
+        assert isinstance(message, ChatMessageAnswer)
+        return message
 
     def get_waiting_time(self):
         return self.messages[1].time - self.messages[0].time
