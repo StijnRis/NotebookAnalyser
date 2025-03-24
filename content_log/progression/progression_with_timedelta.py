@@ -1,16 +1,13 @@
 from datetime import timedelta
 
-from content_log.progression.progression import Progression
-from content_log.progression.time_series import TimeSeries
 
-
-class ProgressionWithTimedelta(Progression):
+class ProgressionWithTimedelta:
     def __init__(self, times: list[timedelta], progression: list[float]):
         self.times = times
         self.progression = progression
 
-    def get_times(self) -> list[float]:
-        return [t.total_seconds() for t in self.times]
+    def get_times(self) -> list[timedelta]:
+        return self.times
 
     def get_progression(self) -> list[float]:
         return self.progression
@@ -71,5 +68,5 @@ class ProgressionWithTimedelta(Progression):
 
         return ProgressionWithTimedelta(working_times, self.progression)
 
-    def convert_to_time_series(self):
-        return TimeSeries(self.get_times(), self.progression)
+    def convert_to_list_of_tuples(self) -> list[tuple[float, float]]:
+        return list(zip([x.total_seconds() for x in self.times], self.progression))

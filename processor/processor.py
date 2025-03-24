@@ -1,12 +1,12 @@
 from dotenv import load_dotenv
 
 from analyser.analyser import Analyser
+from analyser.code_file_analyser import CodeFileAnalyser
 from analyser.event_sequence_analysis import EventSequenceAnalysis
 from analyser.file_activity_analyser import FileActivityAnalyser
 from analyser.interaction_analyser import InteractionAnalyser
 from analyser.question_analyser import QuestionAnalyser
 from analyser.user_analyser import UserAnalyser
-from analyser.user_code_files_analyser import CodeFileAnalyser
 from chat_log.analyser.chatbot_chat_message_analyser import ChatbotChatMessageAnalyser
 from chatbot import Chatbot
 from report.report_generator import ReportGenerator

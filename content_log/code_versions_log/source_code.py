@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 import ast
 from datetime import datetime
 from difflib import SequenceMatcher
@@ -11,8 +10,7 @@ class SourceCode:
 
     def get_time(self) -> datetime:
         return self.time
-    
-    @abstractmethod
+
     def get_code(self) -> str:
         return self.code
 
@@ -34,7 +32,7 @@ class SourceCode:
         similarity = SequenceMatcher(None, ast1, ast2).ratio()
 
         return similarity
-    
+
     def get_code_difference_ratio(self, other: "SourceCode"):
         """
         Compare output of two notebooks

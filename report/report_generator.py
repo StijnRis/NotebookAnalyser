@@ -1,14 +1,35 @@
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import List, Sequence
+from typing import Sequence
 
 import xlsxwriter
 from xlsxwriter.utility import xl_col_to_name
 
 
-from content_log.progression.progression_with_datetime import ProgressionWithDatetime
-from content_log.progression.progression_with_timedelta import ProgressionWithTimedelta
-from content_log.progression.time_series import TimeSeries
+def is_list_of_tuple_float_float(data):
+    return isinstance(data, list) and all(
+        isinstance(item, tuple)
+        and len(item) == 2
+        and (isinstance(item[0], float) or isinstance(item[1], float))
+        for item in data
+    )
+
+
+def is_list_of_tuple_float_bool(data):
+    return isinstance(data, list) and all(
+        isinstance(item, tuple)
+        and len(item) == 2
+        and (isinstance(item[0], float) or isinstance(item[1], bool))
+        for item in data
+    )
+
+def is_list_of_tuple_datetime_datetime(data):
+    return isinstance(data, list) and all(
+        isinstance(item, tuple)
+        and len(item) == 2
+        and (isinstance(item[0], datetime) or isinstance(item[1], datetime))
+        for item in data
+    )
 
 
 class ReportGenerator:
@@ -72,20 +93,20 @@ class ReportGenerator:
                 self.write_column_with_timedelta_data(
                     worksheet, keys.index(key), key, column_data
                 )
-            elif isinstance(data[0][key], TimeSeries):
-                self.write_column_with_timeseries_data(
-                    worksheet, keys.index(key), key, column_data
-                )
-            elif isinstance(data[0][key], ProgressionWithTimedelta):
-                self.write_column_with_notebook_progression_with_timedelta_data(
-                    worksheet, keys.index(key), key, column_data
-                )
-            elif isinstance(data[0][key], ProgressionWithDatetime):
-                self.write_column_with_notebook_progression_with_datetime_data(
+            elif is_list_of_tuple_float_float(data[0][key]):
+                self.write_column_with_list_of_tuple_float_float(
                     worksheet, keys.index(key), key, column_data
                 )
             elif isinstance(data[0][key], Enum):
                 self.write_column_with_enum_data(
+                    worksheet, keys.index(key), key, column_data
+                )
+            elif is_list_of_tuple_float_bool(data[0][key]):
+                self.write_column_with_list_of_tuple_float_bool(
+                    worksheet, keys.index(key), key, column_data
+                )
+            elif is_list_of_tuple_datetime_datetime(data[0][key]):
+                self.write_column_with_list_of_tuple_datetime_datetime(
                     worksheet, keys.index(key), key, column_data
                 )
             else:
@@ -101,12 +122,12 @@ class ReportGenerator:
         for i, item in enumerate(column_data):
             worksheet.write(i + 1, column_nr, item)
 
-    def write_column_with_timeseries_data(
+    def write_column_with_list_of_tuple_float_float(
         self,
         worksheet: xlsxwriter.Workbook.worksheet_class,
         column_nr: int,
         column_name: str,
-        column_data: Sequence[TimeSeries],
+        column_data: list[list[tuple[float, float]]],
     ):
         # Create the worksheets for keys with multiple values
         worksheet_name = worksheet.name
@@ -118,19 +139,100 @@ class ReportGenerator:
         worksheet_y.hide()
 
         # Save data
-        for i, item in enumerate(column_data):
-            worksheet_x.write_row(i + 1, 0, item.times)
-            worksheet_y.write_row(i + 1, 0, item.data)
-            end_column = xl_col_to_name(len(item.times))
-            negative_value = any(value < 0 for value in item.data)
+        for row, item_list in enumerate(column_data):
+            for column, item in enumerate(item_list):
+                worksheet_x.write(row + 1, column, item[0])
+                worksheet_y.write(row + 1, column, item[1])
+            end_column = xl_col_to_name(len(item_list))
+            negative_value = any(value[1] < 0 for value in item_list)
             worksheet.add_sparkline(
-                i + 1,
+                row + 1,
                 column_nr,
                 {
-                    "range": f"'{worksheet_y.name}'!$A${i + 2}:${end_column}${i + 2}",
-                    "date_axis": f"'{worksheet_x.name}'!$A${i + 2}:${end_column}${i + 2}",
+                    "range": f"'{worksheet_y.name}'!$A${row + 2}:${end_column}${row + 2}",
+                    "date_axis": f"'{worksheet_x.name}'!$A${row + 2}:${end_column}${row + 2}",
                     "type": "line",
                     "axis": negative_value,
+                },
+            )
+
+        # Apply format to multi-valued columns
+        worksheet.set_column(column_nr, column_nr, 20)
+    
+    def write_column_with_list_of_tuple_float_bool(
+        self,
+        worksheet: xlsxwriter.Workbook.worksheet_class,
+        column_nr: int,
+        column_name: str,
+        column_data: list[list[tuple[float, bool]]],
+    ):
+        # Create the worksheets for keys with multiple values
+        worksheet_name = worksheet.name
+        x_name = f"x {worksheet_name} - {column_name}"[:31]
+        Y_name = f"y {worksheet_name} - {column_name}"[:31]
+        worksheet_x = self.workbook.add_worksheet(x_name)
+        worksheet_x.hide()
+        worksheet_y = self.workbook.add_worksheet(Y_name)
+        worksheet_y.hide()
+
+        # Save data
+        for row, item_list in enumerate(column_data):
+            for column, item in enumerate(item_list):
+                worksheet_x.write(row + 1, column, item[0])
+                worksheet_y.write(row + 1, column, item[1])
+            end_column = xl_col_to_name(len(item_list))
+            worksheet.add_sparkline(
+                row + 1,
+                column_nr,
+                {
+                    "range": f"'{worksheet_y.name}'!$A${row + 2}:${end_column}${row + 2}",
+                    "date_axis": f"'{worksheet_x.name}'!$A${row + 2}:${end_column}${row + 2}",
+                    "type": "column",
+                    "style": 5,
+                },
+            )
+
+        # Apply format to multi-valued columns
+        worksheet.set_column(column_nr, column_nr, 20)
+    
+    def write_column_with_list_of_tuple_datetime_datetime(
+        self,
+        worksheet: xlsxwriter.Workbook.worksheet_class,
+        column_nr: int,
+        column_name: str,
+        column_data: list[list[tuple[datetime, datetime]]],
+    ):
+        # Create the worksheets for keys with multiple values
+        worksheet_name = worksheet.name
+        x_name = f"x {worksheet_name} - {column_name}"[:31]
+        Y_name = f"y {worksheet_name} - {column_name}"[:31]
+        worksheet_x = self.workbook.add_worksheet(x_name)
+        worksheet_x.hide()
+        worksheet_y = self.workbook.add_worksheet(Y_name)
+        worksheet_y.hide()
+
+        # Save data
+        for row, item_list in enumerate(column_data):
+            offset = min([min(item) for item in item_list]) if (len(item_list) > 0) else datetime.fromtimestamp(0)
+            for column, item in enumerate(item_list):
+                start = (item[0] - offset).total_seconds()
+                end = (item[1] - offset).total_seconds()
+                worksheet_x.write(row + 1, 4 * column, start)
+                worksheet_y.write(row + 1, 4 * column, 0)
+                worksheet_x.write(row + 1, 4 * column + 1, start)
+                worksheet_y.write(row + 1, 4 * column + 1, 1)
+                worksheet_x.write(row + 1, 4 * column + 2, end)
+                worksheet_y.write(row + 1, 4 * column + 2, 1)
+                worksheet_x.write(row + 1, 4 * column + 3, end)
+                worksheet_y.write(row + 1, 4 * column + 3, 0)
+            end_column = xl_col_to_name(len(item_list) * 4)
+            worksheet.add_sparkline(
+                row + 1,
+                column_nr,
+                {
+                    "range": f"'{worksheet_y.name}'!$A${row + 2}:${end_column}${row + 2}",
+                    "date_axis": f"'{worksheet_x.name}'!$A${row + 2}:${end_column}${row + 2}",
+                    "type": "line",
                 },
             )
 
@@ -213,32 +315,6 @@ class ReportGenerator:
                 worksheet.write(i + 1, column_nr, item, time_format_minutes)
             else:
                 worksheet.write(i + 1, column_nr, item, time_format_hours)
-    
-    def write_column_with_notebook_progression_with_timedelta_data(
-        self,
-        worksheet: xlsxwriter.Workbook.worksheet_class,
-        column_nr: int,
-        column_name: str,
-        column_data: list[ProgressionWithTimedelta],
-    ):
-        # Convert NotebookProgression to TimeSeries
-        timeseries_data = [item.convert_to_time_series() for item in column_data]
-        self.write_column_with_timeseries_data(
-            worksheet, column_nr, column_name, timeseries_data
-    )
-
-    def write_column_with_notebook_progression_with_datetime_data(
-        self,
-        worksheet: xlsxwriter.Workbook.worksheet_class,
-        column_nr: int,
-        column_name: str,
-        column_data: list[ProgressionWithDatetime],
-    ):
-        # Convert NotebookProgression to TimeSeries
-        timeseries_data = [item.convert_to_progression_with_timedelta().convert_to_time_series() for item in column_data]
-        self.write_column_with_timeseries_data(
-            worksheet, column_nr, column_name, timeseries_data
-        )
 
     def close(self):
         while True:

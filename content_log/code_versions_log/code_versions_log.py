@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from content_log.code.code_file import CodeFile
+from content_log.code_versions_log.code_file import CodeFile
 
 
 class CodeVersionsLog:
@@ -14,6 +14,9 @@ class CodeVersionsLog:
     def check_invariants(self):
         for i in range(len(self.code_files) - 1):
             assert self.code_files[i].get_time() <= self.code_files[i + 1].get_time()
+
+        for i in range(len(self.code_files) - 1):
+            assert self.code_files[i].get_path() == self.code_files[i + 1].get_path()
 
         # for workspace in self.workspaces:
         #     workspace.check_invariants()
@@ -45,3 +48,15 @@ class CodeVersionsLog:
 
         print(f"No code file found at time {time}")
         return CodeFile(time, "", "")
+
+    def remove_duplicates(self):
+        """
+        Remove duplicate code files.
+        """
+
+        new_code_files: list[CodeFile] = []
+        for code_file in self.code_files:
+            if len(new_code_files) == 0 or new_code_files[-1].get_code() != code_file.get_code():
+                new_code_files.append(code_file)
+
+        return CodeVersionsLog(new_code_files)

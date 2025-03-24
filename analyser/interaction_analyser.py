@@ -1,8 +1,6 @@
 from analyser.analyser import Analyser
 from chat_log.chat_interaction import ChatInteraction
-from report.report_generator import ReportGenerator
 from user.user import User
-from user.users import Users
 
 
 class InteractionAnalyser(Analyser):
@@ -12,7 +10,7 @@ class InteractionAnalyser(Analyser):
 
     def __init__(self):
         super().__init__()
-        
+
     def analyze_interaction(self, message: ChatInteraction):
         question = message.get_question().body
         answer = message.get_answer().body

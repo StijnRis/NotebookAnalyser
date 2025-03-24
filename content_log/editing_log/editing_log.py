@@ -20,7 +20,7 @@ class EditingLog:
         events: List[EditingEvent],
     ):
         self.events = events
-        self.idle_threshold = timedelta(minutes=4)
+        self.idle_threshold = timedelta(minutes=5)
 
         self.events.sort(key=lambda x: x.get_time())
 

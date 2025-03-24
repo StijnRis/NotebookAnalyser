@@ -1,9 +1,9 @@
 import json
 from datetime import datetime
 
-from content_log.code.code_file import CodeFile
-from content_log.code.file_versions_log import CodeVersionsLog
-from content_log.code.source_code import SourceCode
+from content_log.code_versions_log.code_file import CodeFile
+from content_log.code_versions_log.code_versions_log import CodeVersionsLog
+from content_log.code_versions_log.source_code import SourceCode
 from content_log.editing_log.editing_event import (
     ClipboardCopyEvent,
     ClipboardCutEvent,
@@ -235,7 +235,7 @@ class JupyterWorkspaceLogBuilder:
         for file in self.editing_events:
             editing_log = EditingFileLog(file, self.editing_events[file])
             file_execution_log = FileExecutionLog(self.execution_events[file])
-            code_version_manager = CodeVersionsLog(self.source_codes[file])
+            code_version_manager = CodeVersionsLog(self.source_codes[file]).remove_duplicates()
 
             file_log = FileLog(
                 file, editing_log, code_version_manager, file_execution_log

@@ -1,7 +1,7 @@
 
 
 from datetime import datetime
-from content_log.code.source_code import SourceCode
+from content_log.code_versions_log.source_code import SourceCode
 
 
 class CodeFile(SourceCode):
