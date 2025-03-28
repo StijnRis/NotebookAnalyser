@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from functools import lru_cache
 
 from content_log.code_versions_log.code_versions_log import CodeVersionsLog
-from content_log.editing_log.editing_log import EditingLog
+from content_log.event_log.events_log import EditingLog
 from content_log.execution_log.file_execution_log import FileExecutionLog
 from content_log.progression.progression_with_datetime import ProgressionWithDatetime
 
@@ -33,20 +33,34 @@ class FileLog:
     def get_file_execution_log(self) -> FileExecutionLog:
         return self.file_execution_log
 
-    def get_start_time(self) -> datetime:
-        time1 = self.editing_log.get_start_time()
+    def get_start_active_time(self) -> datetime:
+        time1 = self.editing_log.get_start_active_time()
         time2 = self.code_version_log.get_start_time()
         time3 = self.file_execution_log.get_start_time()
 
         return max(time1, time2, time3)
 
-    def get_end_time(self) -> datetime:
-        time1 = self.editing_log.get_end_time()
+    def get_end_active_time(self) -> datetime:
+        time1 = self.editing_log.get_end_active_time()
         time2 = self.code_version_log.get_end_time()
         time3 = self.file_execution_log.get_end_time()
 
         return max(time1, time2, time3)
-    
+
+    def get_start_passive_time(self) -> datetime:
+        time1 = self.editing_log.get_start_passive_time()
+        time2 = self.code_version_log.get_start_time()
+        time3 = self.file_execution_log.get_start_time()
+
+        return max(time1, time2, time3)
+
+    def get_end_passive_time(self) -> datetime:
+        time1 = self.editing_log.get_end_passive_time()
+        time2 = self.code_version_log.get_end_time()
+        time3 = self.file_execution_log.get_end_time()
+
+        return max(time1, time2, time3)
+
     def get_active_periods(self) -> list[tuple[datetime, datetime]]:
         event_sequence = self.get_event_sequence()
 
@@ -60,9 +74,9 @@ class FileLog:
             elif (event_time - previous_time) > self.idle_threshold:
                 active_periods.append((start_time, event_time))
                 start_time = None
-            
+
             previous_time = event_time
-        
+
         if start_time is not None:
             active_periods.append((start_time, event_sequence[-1][0]))
 
@@ -137,7 +151,7 @@ class FileLog:
         editing_sequence = self.editing_log.get_event_sequence()
         execution_sequence = self.file_execution_log.get_event_sequence()
 
-        event_sequence =  editing_sequence + execution_sequence
+        event_sequence = editing_sequence + execution_sequence
 
         event_sequence.sort(key=lambda x: x[0])
 

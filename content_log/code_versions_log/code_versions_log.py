@@ -46,7 +46,6 @@ class CodeVersionsLog:
             if code_file.get_time() > time:
                 return code_file
 
-        print(f"No code file found at time {time}")
         return CodeFile(time, "", "")
 
     def remove_duplicates(self):

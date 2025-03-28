@@ -1,10 +1,9 @@
 from datetime import datetime, timedelta
 from typing import List
 
-from content_log.editing_log.editing_event import (
-    EditEvent,
-    EditingEvent,
-    ExecuteEvent,
+from content_log.event_log.content_event import (
+    ContentActiveEvent,
+    ContentEvent,
     FileHiddenEvent,
     FileVisibleEvent,
 )
@@ -17,7 +16,7 @@ class EditingLog:
 
     def __init__(
         self,
-        events: List[EditingEvent],
+        events: List[ContentEvent],
     ):
         self.events = events
         self.idle_threshold = timedelta(minutes=5)
@@ -36,47 +35,36 @@ class EditingLog:
     def get_events(self):
         return self.events
 
-    def get_start_time(self):
+    def get_start_passive_time(self):
+        if len(self.events) == 0:
+            return datetime.fromtimestamp(0)
+
+        return self.events[0].get_time()
+
+    def get_end_passive_time(self):
+        if len(self.events) == 0:
+            return datetime.fromtimestamp(0)
+
+        return self.events[-1].get_time()
+
+    def get_start_active_time(self):
         for entry in self.events:
-            if not isinstance(entry, (FileVisibleEvent, FileHiddenEvent)):
+            if isinstance(entry, (ContentActiveEvent)):
                 return entry.get_time()
-        print("No start time found")
         return datetime.fromtimestamp(0)
 
-    def get_end_time(self):
+    def get_end_active_time(self):
         for entry in reversed(self.events):
-            if not isinstance(entry, (FileVisibleEvent, FileHiddenEvent)):
+            if isinstance(entry, (ContentActiveEvent)):
                 return entry.get_time()
-        print("No end time found")
         return datetime.fromtimestamp(0)
 
-    def get_completion_time(self):
+    def get_total_time(self):
         """
         Get time between the first and last event
         """
 
-        return self.get_end_time() - self.get_start_time()
-
-    def get_open_time(self) -> timedelta:
-        """
-        Calculate the total time of having a file open
-        """
-
-        active_time = timedelta(0)
-        last_time = None
-
-        for event in self.events:
-            event_time = event.get_time()
-
-            if isinstance(event, FileVisibleEvent):
-                last_time = None
-
-            if last_time is not None:
-                active_time += event_time - last_time
-
-            last_time = event_time
-
-        return active_time
+        return self.get_end_passive_time() - self.get_start_passive_time()
 
     def get_total_editing_time(self) -> timedelta:
         """
@@ -139,19 +127,3 @@ class EditingLog:
         """
 
         return [(entry.get_time(), entry.__class__.__name__) for entry in self.events]
-
-    def get_amount_of_edit_cycles(self):
-        """
-        Get how many times is the program run and then edited
-        """
-
-        total = 0
-        edited = False
-        for entry in self.events:
-            if isinstance(entry, ExecuteEvent) and edited:
-                total += 1
-                edited = False
-            if isinstance(entry, EditEvent):
-                edited = True
-
-        return total

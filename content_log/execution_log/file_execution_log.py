@@ -13,6 +13,13 @@ class FileExecutionLog:
     def get_execution_outputs(self) -> list[ExecutionOutput]:
         return self.executions
     
+    def get_runtime_errors(self) -> list[ErrorResult]:
+        runtime_errors = []
+        for entry in self.executions:
+            if isinstance(entry, ErrorResult):
+                runtime_errors.append(entry)
+        return runtime_errors
+    
     def get_start_time(self) -> datetime:
         if len(self.executions) == 0:
             return datetime.fromtimestamp(0)
@@ -53,20 +60,3 @@ class FileExecutionLog:
             results.append((entry.get_time(), entry.__class__.__name__))
 
         return results
-
-    # def get_all_outputs_at(self, time: datetime) -> List[str]:
-    #     """
-    #     Get the outputs of the notebook.
-    #     """
-    #     outputs: list[str] = []
-    #     for cell in self.executions:
-    #         if cell.cell_type != "code":
-    #             continue
-
-    #         # Add output of cell
-    #         total_output = ""
-    #         for output in cell.outputs:
-    #             total_output += output.to_string()
-    #         outputs.append(total_output)
-
-    #     return outputs

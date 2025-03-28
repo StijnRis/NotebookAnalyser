@@ -13,7 +13,8 @@ class UserAnalyser(Analyser):
     def analyse_user(self, user: User):
         user_data = {
             "Username": user.username,
-            "Message Count": user.get_chat_log().get_amount_of_messages(),
+            "Message count": user.get_chat_log().get_amount_of_messages(),
+            "File count": user.get_workspace_log().get_amount_of_files(),
             # "Notebook open Time": user.get_workspace_log().get_notebook_open_time(),
             # "Notebook usage Time": user.get_workspace_log().get_notebook_usage_time(),
             # "Tab switches": user.get_workspace_log().get_amount_of_tab_switches(),

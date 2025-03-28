@@ -3,15 +3,18 @@ from datetime import datetime
 
 from content_log.code_versions_log.code_file import CodeFile
 from content_log.code_versions_log.code_versions_log import CodeVersionsLog
-from content_log.code_versions_log.source_code import SourceCode
-from content_log.editing_log.editing_event import (
+from content_log.event_log.content_event import (
     ClipboardCopyEvent,
     ClipboardCutEvent,
     ClipboardPasteEvent,
-    EditEvent,
-    EditingEvent,
+    ContentEvent,
+    FileEditEvent,
+    FileHiddenEvent,
+    FileOpenEvent,
+    FileVisibleEvent,
 )
-from content_log.editing_log.editing_file_log import EditingFileLog
+from content_log.event_log.events_log import EditingLog
+from content_log.event_log.file_events_log import EditingFileLog
 from content_log.execution_log.execution_output import (
     EmptyResult,
     ErrorResult,
@@ -26,7 +29,7 @@ from content_log.workspace_log import WorkspaceLog
 
 class JupyterWorkspaceLogBuilder:
     def __init__(self):
-        self.editing_events: dict[str, list[EditingEvent]] = {}
+        self.editing_events: dict[str, list[ContentEvent]] = {}
         self.execution_events: dict[str, list[ExecutionOutput]] = {}
         self.source_codes: dict[str, list[CodeFile]] = {}
 
@@ -75,26 +78,28 @@ class JupyterWorkspaceLogBuilder:
         if event is None:
             return
 
-        log_entry, index = event
+        log_entry, indexes = event
         file = event_data["notebookState"]["notebookPath"]
-        file_name = f"{file}_{index}"
 
-        file_info = self.get_editing_info_for_file(file_name)
+        for index in indexes:
+            file_name = f"{file}_{index}"
 
-        file_info.append(log_entry)
+            file_info = self.get_editing_info_for_file(file_name)
 
-    def parse_editing_event(self, data: dict) -> tuple[EditingEvent, int] | None:
+            file_info.append(log_entry)
+
+    def parse_editing_event(self, data: dict) -> tuple[ContentEvent, list[int]] | None:
         event_type = data["eventDetail"]["eventName"]
         event_time = datetime.fromtimestamp(data["eventDetail"]["eventTime"] / 1000)
 
         if event_type == "CellEditEvent":
-            return EditEvent(event_time), data["eventDetail"]["eventInfo"]["index"]
+            return FileEditEvent(event_time), [data["eventDetail"]["eventInfo"]["index"]]
         elif event_type == "NotebookVisibleEvent":
             pass
-            # return FileVisibleEvent(event_time), None
+            # return FileVisibleEvent(event_time), [cell["index"] for cell in data["eventDetail"]["eventInfo"]["cells"]]
         elif event_type == "NotebookHiddenEvent":
             pass
-            # return FileHiddenEvent(event_time), None
+            # return FileHiddenEvent(event_time), [cell["index"] for cell in data["eventDetail"]["eventInfo"]["cells"]]
         elif event_type == "NotebookOpenEvent":
             pass
             # return FileOpenEvent(event_time), None
@@ -112,21 +117,21 @@ class JupyterWorkspaceLogBuilder:
                 ClipboardPasteEvent(
                     event_time, data["eventDetail"]["eventInfo"]["selection"]
                 ),
-                data["eventDetail"]["eventInfo"]["cells"][0]["index"],
+                [data["eventDetail"]["eventInfo"]["cells"][0]["index"]],
             )
         elif event_type == "ClipboardCopyEvent":
             return (
                 ClipboardCopyEvent(
                     event_time, data["eventDetail"]["eventInfo"]["selection"]
                 ),
-                data["eventDetail"]["eventInfo"]["cells"][0]["index"],
+                [data["eventDetail"]["eventInfo"]["cells"][0]["index"]],
             )
         elif event_type == "ClipboardCutEvent":
             return (
                 ClipboardCutEvent(
                     event_time, data["eventDetail"]["eventInfo"]["selection"]
                 ),
-                data["eventDetail"]["eventInfo"]["cells"][0]["index"],
+                [data["eventDetail"]["eventInfo"]["cells"][0]["index"]],
             )
         elif event_type == "CellAddEvent":
             pass
@@ -168,9 +173,7 @@ class JupyterWorkspaceLogBuilder:
 
         cells = notebook_state["notebookContent"]["cells"]
 
-        executed_cell_index = data["eventDetail"]["eventInfo"]["cells"][0][
-            "index"
-        ]
+        executed_cell_index = data["eventDetail"]["eventInfo"]["cells"][0]["index"]
         executed_cell = cells[executed_cell_index]
 
         if executed_cell["cell_type"] != "code":
@@ -181,7 +184,6 @@ class JupyterWorkspaceLogBuilder:
         if len(outputs) == 0:
             return [EmptyResult(event_time)]
 
-
         events = []
         for output_data in outputs:
             if output_data["output_type"] == "stream":
@@ -190,7 +192,7 @@ class JupyterWorkspaceLogBuilder:
                 events.append(
                     ErrorResult(
                         event_time,
-                        output_data["traceback"],
+                        "\n".join(output_data["traceback"]),
                         output_data["ename"],
                         output_data["evalue"],
                     )
@@ -203,9 +205,12 @@ class JupyterWorkspaceLogBuilder:
         return events
 
     def load_code_files(self, data: dict):
-        if "notebookState" not in data or data["notebookState"]["notebookContent"] is None:
+        if (
+            "notebookState" not in data
+            or data["notebookState"]["notebookContent"] is None
+        ):
             return
-        
+
         file_path = data["notebookState"]["notebookPath"]
         code_files = self.parse_code_files(data, file_path)
 
@@ -235,7 +240,9 @@ class JupyterWorkspaceLogBuilder:
         for file in self.editing_events:
             editing_log = EditingFileLog(file, self.editing_events[file])
             file_execution_log = FileExecutionLog(self.execution_events[file])
-            code_version_manager = CodeVersionsLog(self.source_codes[file]).remove_duplicates()
+            code_version_manager = CodeVersionsLog(
+                self.source_codes[file]
+            ).remove_duplicates()
 
             file_log = FileLog(
                 file, editing_log, code_version_manager, file_execution_log

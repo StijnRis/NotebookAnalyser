@@ -7,6 +7,9 @@ class WorkspaceLog:
     def __init__(self, file_logs: list[FileLog]):
         self.file_logs = file_logs
 
+    def get_amount_of_files(self) -> int:
+        return len(self.file_logs)
+
     def get_file_logs(self) -> list[FileLog]:
         return self.file_logs
 

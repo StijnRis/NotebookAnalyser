@@ -21,7 +21,7 @@ class FileActivityAnalyser(Analyser):
                 "Similarities with AI": ",".join(
                     str(
                         file_activity.get_similarities_between_ai_code_and_cell(
-                            file_activity.get_file_log().get_end_time()
+                            file_activity.get_file_log().get_end_active_time()
                         )
                     )
                 ),

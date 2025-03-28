@@ -48,14 +48,14 @@ class StreamResult(ExecutionOutput):
 
 class ErrorResult(ExecutionOutput):
     def __init__(
-        self, time: datetime, traceback: list[str], error_name: str, error_value: str
+        self, time: datetime, traceback: str, error_name: str, error_value: str
     ):
         super().__init__(time)
         self.traceback = traceback
         self.error_name = error_name
         self.error_value = error_value
 
-    def get_traceback(self) -> list[str]:
+    def get_traceback(self) -> str:
         return self.traceback
 
     def get_error_name(self) -> str:
