@@ -1,18 +1,30 @@
 import os
 
+from chat_log.analyser.chat_message_analyser import ChatMessageAnalyser
 from chat_log.builder.jupyter_chat_log_builder import JupyterChatLogBuilder
 from content_log.builder.jupyter_content_log_builder import JupyterWorkspaceLogBuilder
+from content_log.execution_log.analyser.execution_error_result_analyser import (
+    ExecutionErrorResultAnalyser,
+)
 from user.user import User
 from user.users import Users
 
 
 class JupyterUsersBuilder:
 
-    def __init__(self, chat_message_analyser, verbose=False):
+    def __init__(
+        self,
+        chat_message_analyser: ChatMessageAnalyser,
+        execution_error_result_analyser: ExecutionErrorResultAnalyser,
+        verbose: bool = False,
+    ):
         self.users_data = {}
         self.chat_message_analyser = chat_message_analyser
+        self.execution_error_result_analyser = execution_error_result_analyser
         self.verbose = verbose
-        self.workspace_log_builder = JupyterWorkspaceLogBuilder()
+        self.workspace_log_builder = JupyterWorkspaceLogBuilder(
+            self.execution_error_result_analyser
+        )
         self.chat_log_builder = JupyterChatLogBuilder(self.chat_message_analyser)
 
     def get_user_data(self, username: str):

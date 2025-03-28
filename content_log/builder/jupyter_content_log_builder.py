@@ -9,18 +9,17 @@ from content_log.event_log.content_event import (
     ClipboardPasteEvent,
     ContentEvent,
     FileEditEvent,
-    FileHiddenEvent,
-    FileOpenEvent,
-    FileVisibleEvent,
 )
-from content_log.event_log.events_log import EditingLog
 from content_log.event_log.file_events_log import EditingFileLog
-from content_log.execution_log.execution_output import (
-    EmptyResult,
-    ErrorResult,
-    ExecuteResult,
-    ExecutionOutput,
-    StreamResult,
+from content_log.execution_log.analyser.execution_error_result_analyser import (
+    ExecutionErrorResultAnalyser,
+)
+from content_log.execution_log.execution_result import (
+    ExecutionEmptyResult,
+    ExecutionErrorResult,
+    ExecutionResult,
+    ExecutionStreamResult,
+    ExecutionTextResult,
 )
 from content_log.execution_log.file_execution_log import FileExecutionLog
 from content_log.file_log import FileLog
@@ -28,10 +27,11 @@ from content_log.workspace_log import WorkspaceLog
 
 
 class JupyterWorkspaceLogBuilder:
-    def __init__(self):
+    def __init__(self, execution_error_result_analyser: ExecutionErrorResultAnalyser):
         self.editing_events: dict[str, list[ContentEvent]] = {}
-        self.execution_events: dict[str, list[ExecutionOutput]] = {}
+        self.execution_events: dict[str, list[ExecutionResult]] = {}
         self.source_codes: dict[str, list[CodeFile]] = {}
+        self.execution_error_result_analyser = execution_error_result_analyser
 
     def load_files(self, file_paths: list[str]):
         for file_path in file_paths:
@@ -93,7 +93,9 @@ class JupyterWorkspaceLogBuilder:
         event_time = datetime.fromtimestamp(data["eventDetail"]["eventTime"] / 1000)
 
         if event_type == "CellEditEvent":
-            return FileEditEvent(event_time), [data["eventDetail"]["eventInfo"]["index"]]
+            return FileEditEvent(event_time), [
+                data["eventDetail"]["eventInfo"]["index"]
+            ]
         elif event_type == "NotebookVisibleEvent":
             pass
             # return FileVisibleEvent(event_time), [cell["index"] for cell in data["eventDetail"]["eventInfo"]["cells"]]
@@ -161,7 +163,7 @@ class JupyterWorkspaceLogBuilder:
 
         file_info.extend(events)
 
-    def parse_file_execution_events(self, data: dict) -> list[ExecutionOutput] | None:
+    def parse_file_execution_events(self, data: dict) -> list[ExecutionResult] | None:
         event_type = data["eventDetail"]["eventName"]
         event_time = datetime.fromtimestamp(data["eventDetail"]["eventTime"] / 1000)
 
@@ -182,23 +184,24 @@ class JupyterWorkspaceLogBuilder:
         outputs = executed_cell["outputs"]
 
         if len(outputs) == 0:
-            return [EmptyResult(event_time)]
+            return [ExecutionEmptyResult(event_time)]
 
         events = []
         for output_data in outputs:
             if output_data["output_type"] == "stream":
-                events.append(StreamResult(event_time, output_data["text"]))
+                events.append(ExecutionStreamResult(event_time, output_data["text"]))
             elif output_data["output_type"] == "error":
                 events.append(
-                    ErrorResult(
+                    ExecutionErrorResult(
                         event_time,
                         "\n".join(output_data["traceback"]),
                         output_data["ename"],
                         output_data["evalue"],
+                        self.execution_error_result_analyser,
                     )
                 )
             elif output_data["output_type"] == "execute_result":
-                events.append(ExecuteResult(event_time, output_data["data"]))
+                events.append(ExecutionTextResult(event_time, output_data["data"]))
             else:
                 raise ValueError(f"Unknown output type: {output_data['output_type']}")
 

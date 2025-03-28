@@ -1,5 +1,5 @@
 from analyser.analyser import Analyser
-from content_log.execution_log.execution_output import ErrorResult
+from content_log.execution_log.execution_result import ExecutionErrorResult
 from user.user import User
 
 
@@ -25,15 +25,17 @@ class RunTimeAnalyser(Analyser):
                 self.analyse_runtime_error(runtime_error, username, file_log.get_path())
 
     def analyse_runtime_error(
-        self, runtime_error: ErrorResult, username: str, file_path: str
+        self, runtime_error: ExecutionErrorResult, username: str, file_path: str
     ):
         runtime_error_data = {
             "Username": username,
             "File": file_path,
             "Error time": runtime_error.get_time(),
             "Error name": runtime_error.get_error_name(),
-            "Error message": runtime_error.get_error_value(),
+            "Error value": runtime_error.get_error_value(),
             "Error traceback": runtime_error.get_traceback(),
+            "Error cleaned traceback": runtime_error.get_cleaned_traceback(),
+            "Error type": runtime_error.get_error_type().name,
         }
 
         self.data.append(runtime_error_data)

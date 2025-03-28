@@ -1,7 +1,7 @@
-
 from datetime import datetime
 from enum import Enum
 from functools import lru_cache
+
 from chat_log.analyser.chat_message_analyser import ChatMessageAnalyser
 from chat_log.chat_message import ChatMessage
 
@@ -37,6 +37,7 @@ class QuestionType(Enum):
 
     NOT_DETECTED = "The chatbot is unable to determine the type of question due to ambiguity or lack of information."
 
+
 class ChatMessageQuestion(ChatMessage):
     """
     A question in the chat log
@@ -48,9 +49,7 @@ class ChatMessageQuestion(ChatMessage):
         body: str,
         chat_message_analyser: ChatMessageAnalyser,
     ):
-        super().__init__(
-            time, body, chat_message_analyser
-        )
+        super().__init__(time, body, chat_message_analyser)
 
     @lru_cache(maxsize=None)
     def get_question_purpose(self):

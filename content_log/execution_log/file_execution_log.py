@@ -1,25 +1,28 @@
 from datetime import datetime
 from typing import List, Tuple
 
-from content_log.execution_log.execution_output import ErrorResult, ExecutionOutput
+from content_log.execution_log.execution_result import (
+    ExecutionErrorResult,
+    ExecutionResult,
+)
 
 
 class FileExecutionLog:
-    def __init__(self, executions: list[ExecutionOutput]):
+    def __init__(self, executions: list[ExecutionResult]):
         self.executions = executions
 
         self.executions.sort(key=lambda x: x.get_time())
 
-    def get_execution_outputs(self) -> list[ExecutionOutput]:
+    def get_execution_outputs(self) -> list[ExecutionResult]:
         return self.executions
-    
-    def get_runtime_errors(self) -> list[ErrorResult]:
+
+    def get_runtime_errors(self) -> list[ExecutionErrorResult]:
         runtime_errors = []
         for entry in self.executions:
-            if isinstance(entry, ErrorResult):
+            if isinstance(entry, ExecutionErrorResult):
                 runtime_errors.append(entry)
         return runtime_errors
-    
+
     def get_start_time(self) -> datetime:
         if len(self.executions) == 0:
             return datetime.fromtimestamp(0)
@@ -36,7 +39,7 @@ class FileExecutionLog:
     def get_amount_of_runtime_errors(self):
         total = 0
         for entry in self.executions:
-            if isinstance(entry, ErrorResult):
+            if isinstance(entry, ExecutionErrorResult):
                 total += 1
 
         return total
@@ -47,7 +50,7 @@ class FileExecutionLog:
         """
         results = []
         for entry in self.executions:
-            success = not isinstance(entry, ErrorResult)
+            success = not isinstance(entry, ExecutionErrorResult)
             results.append((entry.get_time(), success))
         return results
 

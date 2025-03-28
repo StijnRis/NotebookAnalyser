@@ -1,17 +1,17 @@
 from dotenv import load_dotenv
 
 from analyser.analyser import Analyser
-from analyser.code_file_analyser import CodeFileAnalyser
-from analyser.event_sequence_analysis import EventSequenceAnalysis
-from analyser.file_activity_analyser import FileActivityAnalyser
-from analyser.interaction_analyser import InteractionAnalyser
-from analyser.question_analyser import QuestionAnalyser
 from analyser.runtime_error_analyser import RunTimeAnalyser
-from analyser.user_analyser import UserAnalyser
 from chat_log.analyser.chatbot_chat_message_analyser import ChatbotChatMessageAnalyser
 from chatbot import Chatbot
+from content_log.execution_log.analyser.chatbot_execution_error_result_analyser import (
+    ChatbotExecutionErrorResultAnalyser,
+)
+from processor.learning_goal import LearningGoal
 from report.report_generator import ReportGenerator
 from user.builder.jupyter_users_builder import JupyterUsersBuilder
+
+
 
 
 class Processor:
@@ -22,6 +22,23 @@ class Processor:
         self.chatbot = Chatbot(self.chatbot_cache)
 
         self.chat_message_analyser = ChatbotChatMessageAnalyser(self.chatbot)
+
+        self.error_types = [
+            LearningGoal("Variable assignment", "Error with assigning a variable."),
+            LearningGoal("If statement", "Error with an if statement."),
+            LearningGoal("For loop", "Error with a for loop."),
+            LearningGoal("While loop", "Error with a while loop."),
+            LearningGoal("Function definition", "Error with a function definition."),
+            LearningGoal("Function call", "Error with a function call."),
+            LearningGoal("Lists declaration", "Error with defining a list."),
+            LearningGoal("Accessing list", "Error with accessing a list."),
+            LearningGoal("Setting list", "Error with setting a value in a list."),
+            LearningGoal("Import statement", "Error with an import statement."),
+            LearningGoal("Type error", "Operation involving incompatible data types."),
+        ]
+        self.execution_error_result_analyser = ChatbotExecutionErrorResultAnalyser(
+            self.error_types, self.chatbot
+        )
 
         self.analysers: list[Analyser] = [
             # UserAnalyser(),
@@ -48,7 +65,11 @@ class Processor:
 
         data_location = small_sample_data_location
 
-        builder = JupyterUsersBuilder(self.chat_message_analyser, verbose=True)
+        builder = JupyterUsersBuilder(
+            self.chat_message_analyser,
+            self.execution_error_result_analyser,
+            verbose=True,
+        )
         builder.load_log_directory(data_location[0])
         builder.load_volumes_directory(data_location[1])
         self.users = builder.build()

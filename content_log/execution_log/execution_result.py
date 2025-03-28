@@ -1,9 +1,16 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 from difflib import SequenceMatcher
+from functools import lru_cache
+import re
+
+from content_log.execution_log.analyser.execution_error_result_analyser import (
+    ExecutionErrorResultAnalyser,
+    LearningGoal,
+)
 
 
-class ExecutionOutput(ABC):
+class ExecutionResult(ABC):
     def __init__(self, time: datetime):
         self.time = time
 
@@ -14,7 +21,7 @@ class ExecutionOutput(ABC):
     def get_content(self) -> str:
         pass
 
-    def get_output_similarity_ratio(self, other: "ExecutionOutput"):
+    def get_output_similarity_ratio(self, other: "ExecutionResult"):
         """
         Compare output of two notebooks
         """
@@ -25,7 +32,7 @@ class ExecutionOutput(ABC):
         return SequenceMatcher(None, output1, output2).ratio()
 
 
-class EmptyResult(ExecutionOutput):
+class ExecutionEmptyResult(ExecutionResult):
     def __init__(self, time: datetime):
         super().__init__(time)
 
@@ -33,7 +40,7 @@ class EmptyResult(ExecutionOutput):
         return "<EmptyResult>"
 
 
-class StreamResult(ExecutionOutput):
+class ExecutionStreamResult(ExecutionResult):
     """
     "output_type": "stream"
     """
@@ -46,17 +53,28 @@ class StreamResult(ExecutionOutput):
         return self.content
 
 
-class ErrorResult(ExecutionOutput):
+class ExecutionErrorResult(ExecutionResult):
     def __init__(
-        self, time: datetime, traceback: str, error_name: str, error_value: str
+        self,
+        time: datetime,
+        traceback: str,
+        error_name: str,
+        error_value: str,
+        analyser: ExecutionErrorResultAnalyser,
     ):
         super().__init__(time)
         self.traceback = traceback
         self.error_name = error_name
         self.error_value = error_value
+        self.analyser = analyser
 
     def get_traceback(self) -> str:
         return self.traceback
+
+    def get_cleaned_traceback(self) -> str:
+        traceback = self.traceback
+        traceback = re.sub(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])', '', traceback)
+        return traceback
 
     def get_error_name(self) -> str:
         return self.error_name
@@ -67,8 +85,12 @@ class ErrorResult(ExecutionOutput):
     def get_content(self) -> str:
         return f"{self.error_name}: {self.error_value}"
 
+    @lru_cache(maxsize=None)
+    def get_error_type(self) -> LearningGoal:
+        return self.analyser.get_error_type(self)
 
-class ExecuteResult(ExecutionOutput):
+
+class ExecutionTextResult(ExecutionResult):
     def __init__(self, time: datetime, result: dict):
         super().__init__(time)
         self.result = result
@@ -77,7 +99,7 @@ class ExecuteResult(ExecutionOutput):
         return str(self.result)
 
 
-class DisplayDataResult(ExecutionOutput):
+class ExecutionImageResult(ExecutionResult):
     def __init__(self, time: datetime, data: dict):
         super().__init__(time)
         self.data = data

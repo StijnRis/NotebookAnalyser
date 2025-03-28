@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
-
-# Forward declaration of ChatMessage
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from chat_log.chat_message import ChatMessage, QuestionPurpose, QuestionType
+    from chat_log.chat_message import ChatMessage
+    from chat_log.chat_message_question import QuestionPurpose, QuestionType
 
 
 class ChatMessageAnalyser(ABC):

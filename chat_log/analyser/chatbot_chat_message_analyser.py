@@ -23,7 +23,6 @@ class ChatbotChatMessageAnalyser(ChatMessageAnalyser):
 
         return QuestionPurpose.NOT_DETECTED
 
-    # TODO check if not two question types are returned in the response
     def get_question_type(self, message: ChatMessage):
         explanations = "\n".join([f"{e.name}: {e.value}" for e in QuestionType])
 
