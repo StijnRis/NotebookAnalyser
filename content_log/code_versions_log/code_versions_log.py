@@ -1,6 +1,8 @@
 from datetime import datetime
+from functools import lru_cache
 
 from content_log.code_versions_log.code_file import CodeFile
+from content_log.progression.progression_with_datetime import ProgressionWithDatetime
 
 
 class CodeVersionsLog:
@@ -43,7 +45,7 @@ class CodeVersionsLog:
         """
 
         for code_file in self.code_files:
-            if code_file.get_time() > time:
+            if code_file.get_time() >= time:
                 return code_file
 
         return CodeFile(time, "", "")
@@ -59,3 +61,45 @@ class CodeVersionsLog:
                 new_code_files.append(code_file)
 
         return CodeVersionsLog(new_code_files)
+    
+    @lru_cache(maxsize=None)
+    def get_code_progression(self):
+        saved_workspaces = self.get_code_files()
+
+        times: list[datetime] = []
+        code_progression: list[float] = []
+
+        # Check if user has saved any notebook content
+        if len(saved_workspaces) == 0:
+            return ProgressionWithDatetime(times, code_progression)
+
+        last_workspace = saved_workspaces[-1]
+
+        for workspace in saved_workspaces:
+            code_difference = workspace.get_code_difference_ratio(last_workspace)
+
+            times.append(workspace.get_time())
+            code_progression.append(code_difference)
+
+        return ProgressionWithDatetime(times, code_progression)
+    
+    @lru_cache(maxsize=None)
+    def get_ast_progression(self):
+        files = self.get_code_files()
+
+        times: list[datetime] = []
+        ast_progression: list[float] = []
+
+        # Check if user has saved any notebook content
+        if len(files) == 0:
+            return ProgressionWithDatetime(times, ast_progression)
+
+        last_file = files[-1]
+
+        for file in files:
+            ast_difference = file.get_ast_difference_ratio(last_file)
+
+            times.append(file.get_time())
+            ast_progression.append(ast_difference)
+
+        return ProgressionWithDatetime(times, ast_progression)

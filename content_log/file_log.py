@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta
-from functools import lru_cache
+from difflib import unified_diff
 
 from content_log.code_versions_log.code_versions_log import CodeVersionsLog
 from content_log.event_log.events_log import EditingLog
+from content_log.execution_log.execution_result import ExecutionErrorResult
 from content_log.execution_log.file_execution_log import FileExecutionLog
-from content_log.progression.progression_with_datetime import ProgressionWithDatetime
 
 
 class FileLog:
@@ -82,71 +82,6 @@ class FileLog:
 
         return active_periods
 
-    @lru_cache(maxsize=None)
-    def get_ast_progression(self):
-        files = self.get_code_version_log().get_code_files()
-
-        times: list[datetime] = []
-        ast_progression: list[float] = []
-
-        # Check if user has saved any notebook content
-        if len(files) == 0:
-            return ProgressionWithDatetime(times, ast_progression)
-
-        last_file = files[-1]
-
-        for file in files:
-            ast_difference = file.get_ast_difference_ratio(last_file)
-
-            times.append(file.get_time())
-            ast_progression.append(ast_difference)
-
-        return ProgressionWithDatetime(times, ast_progression)
-
-    @lru_cache(maxsize=None)
-    def get_code_progression(self):
-        saved_workspaces = self.get_code_version_log().get_code_files()
-
-        times: list[datetime] = []
-        code_progression: list[float] = []
-
-        # Check if user has saved any notebook content
-        if len(saved_workspaces) == 0:
-            return ProgressionWithDatetime(times, code_progression)
-
-        last_workspace = saved_workspaces[-1]
-
-        for workspace in saved_workspaces:
-            code_difference = workspace.get_code_difference_ratio(last_workspace)
-
-            times.append(workspace.get_time())
-            code_progression.append(code_difference)
-
-        return ProgressionWithDatetime(times, code_progression)
-
-    @lru_cache(maxsize=None)
-    def get_output_progression(self):
-        execution_outputs = self.get_file_execution_log().get_execution_outputs()
-
-        times: list[datetime] = []
-        output_progression: list[float] = []
-
-        # Check if user has saved any notebook content
-        if len(execution_outputs) == 0:
-            return ProgressionWithDatetime(times, output_progression)
-
-        last_execution_output = execution_outputs[-1]
-
-        for execution_output in execution_outputs:
-            output_similarity = execution_output.get_output_similarity_ratio(
-                last_execution_output
-            )
-
-            times.append(execution_output.get_time())
-            output_progression.append(output_similarity)
-
-        return ProgressionWithDatetime(times, output_progression)
-
     def get_event_sequence(self) -> list[tuple[datetime, str]]:
         editing_sequence = self.editing_log.get_event_sequence()
         execution_sequence = self.file_execution_log.get_event_sequence()
@@ -156,3 +91,31 @@ class FileLog:
         event_sequence.sort(key=lambda x: x[0])
 
         return event_sequence
+
+    def get_code_fix_for_error(self, error: ExecutionErrorResult) -> str:
+        """
+        Get the changes made to the code after a runtime error.
+        This is done by comparing the code of the error and after the error.
+        """
+        time = error.get_time()
+        fixed_execution = self.file_execution_log.get_first_successful_execution_after(
+            time
+        )
+
+        if fixed_execution is None:
+            return "No fix"
+
+        code_file = self.code_version_log.get_code_file_at(time)
+        code_file_after = self.code_version_log.get_code_file_at(
+            fixed_execution.get_time()
+        )
+        code_file = code_file.get_code()
+        code_file_after = code_file_after.get_code()
+
+        differences = "\n".join(
+            unified_diff(
+                code_file.splitlines(), code_file_after.splitlines(), lineterm=""
+            )
+        )
+
+        return differences

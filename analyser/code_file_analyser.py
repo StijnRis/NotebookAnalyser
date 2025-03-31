@@ -19,8 +19,8 @@ class CodeFileAnalyser(Analyser):
         file_logs = notebook_activity.get_file_logs()
 
         for file_log in file_logs:
-            output_progression = file_log.get_output_progression()
-            code_progression = file_log.get_code_progression()
+            output_progression = file_log.get_file_execution_log().get_output_progression()
+            code_progression = file_log.get_code_version_log().get_code_progression()
             # ast_progression = file_log.get_ast_progression()
 
             active_periods = file_log.get_active_periods()

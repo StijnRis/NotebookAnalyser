@@ -75,7 +75,7 @@ class Processor:
         self.users = builder.build()
 
     def run(self):
-        file_path = "output/users_analyser.xlsx"
+        file_path = "output/analysed_activities.xlsx"
         report_generator = ReportGenerator(file_path)
 
         # Analyze users

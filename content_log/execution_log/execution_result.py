@@ -31,8 +31,10 @@ class ExecutionResult(ABC):
 
         return SequenceMatcher(None, output1, output2).ratio()
 
+class ExecutionSuccessResult(ExecutionResult, ABC):
+    pass
 
-class ExecutionEmptyResult(ExecutionResult):
+class ExecutionEmptyResult(ExecutionSuccessResult):
     def __init__(self, time: datetime):
         super().__init__(time)
 
@@ -40,7 +42,7 @@ class ExecutionEmptyResult(ExecutionResult):
         return "<EmptyResult>"
 
 
-class ExecutionStreamResult(ExecutionResult):
+class ExecutionStreamResult(ExecutionSuccessResult):
     """
     "output_type": "stream"
     """
@@ -52,6 +54,22 @@ class ExecutionStreamResult(ExecutionResult):
     def get_content(self) -> str:
         return self.content
 
+class ExecutionTextResult(ExecutionSuccessResult):
+    def __init__(self, time: datetime, result: dict):
+        super().__init__(time)
+        self.result = result
+
+    def get_content(self) -> str:
+        return str(self.result)
+
+
+class ExecutionImageResult(ExecutionSuccessResult):
+    def __init__(self, time: datetime, data: dict):
+        super().__init__(time)
+        self.data = data
+
+    def get_content(self) -> str:
+        return "DisplayDataResult"
 
 class ExecutionErrorResult(ExecutionResult):
     def __init__(
@@ -88,21 +106,3 @@ class ExecutionErrorResult(ExecutionResult):
     @lru_cache(maxsize=None)
     def get_error_type(self) -> LearningGoal:
         return self.analyser.get_error_type(self)
-
-
-class ExecutionTextResult(ExecutionResult):
-    def __init__(self, time: datetime, result: dict):
-        super().__init__(time)
-        self.result = result
-
-    def get_content(self) -> str:
-        return str(self.result)
-
-
-class ExecutionImageResult(ExecutionResult):
-    def __init__(self, time: datetime, data: dict):
-        super().__init__(time)
-        self.data = data
-
-    def get_content(self) -> str:
-        return "DisplayDataResult"

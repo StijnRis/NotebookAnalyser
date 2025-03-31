@@ -1,10 +1,13 @@
 from datetime import datetime
+from functools import lru_cache
 from typing import List, Tuple
 
 from content_log.execution_log.execution_result import (
     ExecutionErrorResult,
     ExecutionResult,
+    ExecutionSuccessResult,
 )
+from content_log.progression.progression_with_datetime import ProgressionWithDatetime
 
 
 class FileExecutionLog:
@@ -22,6 +25,12 @@ class FileExecutionLog:
             if isinstance(entry, ExecutionErrorResult):
                 runtime_errors.append(entry)
         return runtime_errors
+    
+    def get_first_successful_execution_after(self, time: datetime) -> ExecutionResult | None:
+        for entry in self.executions:
+            if entry.get_time() > time and isinstance(entry, ExecutionSuccessResult):
+                return entry
+        return None
 
     def get_start_time(self) -> datetime:
         if len(self.executions) == 0:
@@ -63,3 +72,26 @@ class FileExecutionLog:
             results.append((entry.get_time(), entry.__class__.__name__))
 
         return results
+    
+    @lru_cache(maxsize=None)
+    def get_output_progression(self):
+        execution_outputs = self.get_execution_outputs()
+
+        times: list[datetime] = []
+        output_progression: list[float] = []
+
+        # Check if user has saved any notebook content
+        if len(execution_outputs) == 0:
+            return ProgressionWithDatetime(times, output_progression)
+
+        last_execution_output = execution_outputs[-1]
+
+        for execution_output in execution_outputs:
+            output_similarity = execution_output.get_output_similarity_ratio(
+                last_execution_output
+            )
+
+            times.append(execution_output.get_time())
+            output_progression.append(output_similarity)
+
+        return ProgressionWithDatetime(times, output_progression)
