@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 
 from analyser.analyser import Analyser
-from analyser.runtime_error_analyser import RunTimeAnalyser
+from analyser.execution_analyser import ExecutionAnalyser
 from chat_log.analyser.chatbot_chat_message_analyser import ChatbotChatMessageAnalyser
 from chatbot import Chatbot
 from content_log.execution_log.analyser.chatbot_execution_error_result_analyser import (
@@ -47,7 +47,7 @@ class Processor:
             # FileActivityAnalyser(),
             # QuestionAnalyser(),
             # InteractionAnalyser(),
-            RunTimeAnalyser(),
+            ExecutionAnalyser(),
         ]
 
         self.load_users()

@@ -21,6 +21,13 @@ class FileLog:
         self.file_execution_log = file_execution_log
         self.idle_threshold = timedelta(minutes=5)
 
+        self.check_invariants()
+
+    def check_invariants(self):
+        self.editing_log.check_invariants()
+        self.code_version_log.check_invariants()
+        self.file_execution_log.check_invariants()
+
     def get_path(self) -> str:
         return self.path
 
@@ -92,6 +99,7 @@ class FileLog:
 
         return event_sequence
 
+    #TODO remove
     def get_code_fix_for_error(self, error: ExecutionErrorResult) -> str:
         """
         Get the changes made to the code after a runtime error.

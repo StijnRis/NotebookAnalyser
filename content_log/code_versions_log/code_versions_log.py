@@ -25,15 +25,15 @@ class CodeVersionsLog:
 
     def get_code_files(self) -> list[CodeFile]:
         return self.code_files
-    
+
     def get_amount_of_code_files(self) -> int:
         return len(self.code_files)
-    
+
     def get_start_time(self) -> datetime:
         if len(self.code_files) == 0:
             return datetime.fromtimestamp(0)
         return self.code_files[0].get_time()
-    
+
     def get_end_time(self) -> datetime:
         if len(self.code_files) == 0:
             return datetime.fromtimestamp(0)
@@ -44,11 +44,16 @@ class CodeVersionsLog:
         Get the code content at a certain time.
         """
 
+        closest_code_file = None
         for code_file in self.code_files:
-            if code_file.get_time() >= time:
-                return code_file
+            if code_file.get_time() > time:
+                break
+            closest_code_file = code_file
 
-        return CodeFile(time, "", "")
+        if closest_code_file is None:
+            return CodeFile(time, "", "")
+
+        return closest_code_file
 
     def remove_duplicates(self):
         """
@@ -57,11 +62,14 @@ class CodeVersionsLog:
 
         new_code_files: list[CodeFile] = []
         for code_file in self.code_files:
-            if len(new_code_files) == 0 or new_code_files[-1].get_code() != code_file.get_code():
+            if (
+                len(new_code_files) == 0
+                or new_code_files[-1].get_code() != code_file.get_code()
+            ):
                 new_code_files.append(code_file)
 
         return CodeVersionsLog(new_code_files)
-    
+
     @lru_cache(maxsize=None)
     def get_code_progression(self):
         saved_workspaces = self.get_code_files()
@@ -82,7 +90,7 @@ class CodeVersionsLog:
             code_progression.append(code_difference)
 
         return ProgressionWithDatetime(times, code_progression)
-    
+
     @lru_cache(maxsize=None)
     def get_ast_progression(self):
         files = self.get_code_files()
@@ -97,7 +105,7 @@ class CodeVersionsLog:
         last_file = files[-1]
 
         for file in files:
-            ast_difference = file.get_ast_difference_ratio(last_file)
+            ast_difference = file.get_ast_differences(last_file)
 
             times.append(file.get_time())
             ast_progression.append(ast_difference)

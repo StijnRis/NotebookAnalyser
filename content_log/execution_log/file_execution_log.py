@@ -15,8 +15,15 @@ class FileExecutionLog:
         self.executions = executions
 
         self.executions.sort(key=lambda x: x.get_time())
+    
+    def check_invariants(self):
+        # Check that the log entries are sorted by time
+        for i in range(1, len(self.executions)):
+            assert (
+                self.executions[i].get_time() >= self.executions[i - 1].get_time()
+            ), "Log entries should be sorted by event time"
 
-    def get_execution_outputs(self) -> list[ExecutionResult]:
+    def get_executions(self) -> list[ExecutionResult]:
         return self.executions
 
     def get_runtime_errors(self) -> list[ExecutionErrorResult]:
@@ -75,7 +82,7 @@ class FileExecutionLog:
     
     @lru_cache(maxsize=None)
     def get_output_progression(self):
-        execution_outputs = self.get_execution_outputs()
+        execution_outputs = self.get_executions()
 
         times: list[datetime] = []
         output_progression: list[float] = []

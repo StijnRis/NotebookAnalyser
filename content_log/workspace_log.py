@@ -7,6 +7,12 @@ class WorkspaceLog:
     def __init__(self, file_logs: list[FileLog]):
         self.file_logs = file_logs
 
+        self.check_invariants()
+    
+    def check_invariants(self):
+        for file_log in self.file_logs:
+            file_log.check_invariants()
+
     def get_amount_of_files(self) -> int:
         return len(self.file_logs)
 
@@ -34,15 +40,17 @@ class WorkspaceLog:
         closest_time = None
         closest_file = None
         for file_log in self.file_logs:
-            for entry in file_log.get_editing_log().get_events():
-                if entry.get_time() > time and (
-                    closest_time is None or entry.get_time() < closest_time
-                ):
-                    closest_time = entry.get_time()
-                    closest_file = file_log
+            for event in file_log.get_editing_log().get_events():
+                if event.get_time() > time:
                     break
 
-        if closest_file is not None:
-            return closest_file
+                if closest_time is None or event.get_time() > closest_time:
+                    closest_time = event.get_time()
+                    closest_file = file_log
 
-        raise ValueError("Time before first event")
+        if closest_file is None:
+            raise ValueError("Time before first event")
+        
+        return closest_file
+
+        
