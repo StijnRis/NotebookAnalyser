@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
-from processor.learning_goal import LearningGoal
+from processor.learning_goal.learning_goal import LearningGoal
 
 
 
@@ -11,8 +11,8 @@ if TYPE_CHECKING:
 
 class ExecutionErrorResultAnalyser(ABC):
 
-    def __init__(self, error_types: list[LearningGoal]):
-        self.error_types = error_types
+    def __init__(self, learning_goals: list[LearningGoal]):
+        self.learning_goals = learning_goals
 
     @abstractmethod
     def get_error_type(self, error_event: "ExecutionErrorResult") -> "LearningGoal":

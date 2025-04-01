@@ -133,9 +133,9 @@ class ReportGenerator:
         worksheet_name = worksheet.name
         x_name = f"x {worksheet_name} - {column_name}"[:31]
         Y_name = f"y {worksheet_name} - {column_name}"[:31]
-        worksheet_x = self.workbook.add_worksheet(x_name)
+        worksheet_x = self.workbook.add_worksheet()
         worksheet_x.hide()
-        worksheet_y = self.workbook.add_worksheet(Y_name)
+        worksheet_y = self.workbook.add_worksheet()
         worksheet_y.hide()
 
         # Save data
@@ -144,7 +144,6 @@ class ReportGenerator:
                 worksheet_x.write(row + 1, column, item[0])
                 worksheet_y.write(row + 1, column, item[1])
             end_column = xl_col_to_name(len(item_list))
-            negative_value = any(value[1] < 0 for value in item_list)
             worksheet.add_sparkline(
                 row + 1,
                 column_nr,
@@ -152,7 +151,6 @@ class ReportGenerator:
                     "range": f"'{worksheet_y.name}'!$A${row + 2}:${end_column}${row + 2}",
                     "date_axis": f"'{worksheet_x.name}'!$A${row + 2}:${end_column}${row + 2}",
                     "type": "line",
-                    "axis": negative_value,
                 },
             )
 
@@ -170,9 +168,9 @@ class ReportGenerator:
         worksheet_name = worksheet.name
         x_name = f"x {worksheet_name} - {column_name}"[:31]
         Y_name = f"y {worksheet_name} - {column_name}"[:31]
-        worksheet_x = self.workbook.add_worksheet(x_name)
+        worksheet_x = self.workbook.add_worksheet()
         worksheet_x.hide()
-        worksheet_y = self.workbook.add_worksheet(Y_name)
+        worksheet_y = self.workbook.add_worksheet()
         worksheet_y.hide()
 
         # Save data
@@ -206,9 +204,9 @@ class ReportGenerator:
         worksheet_name = worksheet.name
         x_name = f"x {worksheet_name} - {column_name}"[:31]
         Y_name = f"y {worksheet_name} - {column_name}"[:31]
-        worksheet_x = self.workbook.add_worksheet(x_name)
+        worksheet_x = self.workbook.add_worksheet()
         worksheet_x.hide()
-        worksheet_y = self.workbook.add_worksheet(Y_name)
+        worksheet_y = self.workbook.add_worksheet()
         worksheet_y.hide()
 
         # Save data

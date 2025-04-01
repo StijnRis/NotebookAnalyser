@@ -3,6 +3,7 @@ from functools import lru_cache
 
 from content_log.code_versions_log.code_file import CodeFile
 from content_log.progression.progression_with_datetime import ProgressionWithDatetime
+from processor.learning_goal.learning_goal import LearningGoal
 
 
 class CodeVersionsLog:
@@ -91,23 +92,23 @@ class CodeVersionsLog:
 
         return ProgressionWithDatetime(times, code_progression)
 
-    @lru_cache(maxsize=None)
-    def get_ast_progression(self):
-        files = self.get_code_files()
+    def get_learning_goals_applied_between(
+        self, start: datetime, end: datetime, learning_goals: list[LearningGoal]
+    ) -> list[LearningGoal]:
+        """
+        Get the learning goals applied between two datetime points.
+        """
+        previous_code_version = self.get_code_file_at(start)
+        code_version = self.get_code_file_at(end)
 
-        times: list[datetime] = []
-        ast_progression: list[float] = []
+        lines_changed = code_version.get_line_numbers_of_new_code(previous_code_version)
+        new_ast_items = code_version.get_ast_of_lines(lines_changed)
 
-        # Check if user has saved any notebook content
-        if len(files) == 0:
-            return ProgressionWithDatetime(times, ast_progression)
+        learning_goals_in_ast = []
+        for ast_item in new_ast_items:
+            for goal in learning_goals:
+                times = goal.count_applications_in(ast_item)
+                for i in range(times):
+                    learning_goals_in_ast.append(goal)
 
-        last_file = files[-1]
-
-        for file in files:
-            ast_difference = file.get_ast_differences(last_file)
-
-            times.append(file.get_time())
-            ast_progression.append(ast_difference)
-
-        return ProgressionWithDatetime(times, ast_progression)
+        return learning_goals_in_ast

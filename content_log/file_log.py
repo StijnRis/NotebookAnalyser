@@ -5,6 +5,8 @@ from content_log.code_versions_log.code_versions_log import CodeVersionsLog
 from content_log.event_log.events_log import EditingLog
 from content_log.execution_log.execution_result import ExecutionErrorResult
 from content_log.execution_log.file_execution_log import FileExecutionLog
+from content_log.progression.progression_with_datetime import ProgressionWithDatetime
+from processor.learning_goal.learning_goal import LearningGoal
 
 
 class FileLog:
@@ -127,3 +129,42 @@ class FileLog:
         )
 
         return differences
+    
+    def get_learning_goal_progression(self, learning_goal: LearningGoal) -> ProgressionWithDatetime:
+        """
+        Get the learning goal progression for a certain learning goal.
+        """
+        datetimes = []
+        progression = []
+        score = 0
+
+        previous_successful_execution = None
+        errors_before_succes: list[ExecutionErrorResult] = []
+        for execution in self.file_execution_log.get_executions():
+            if isinstance(execution, ExecutionErrorResult):
+                errors_before_succes.append(execution)
+                continue
+
+            if previous_successful_execution is None:
+                previous_successful_execution = execution
+                continue
+
+            time = execution.get_time()
+
+            applied_learning_goals = self.code_version_log.get_learning_goals_applied_between(
+                previous_successful_execution.get_time(), time, [learning_goal]
+            )
+
+            datetimes.append(time)
+            if len(errors_before_succes) > 0:
+                score -= len(applied_learning_goals)
+            else:
+                score += len(applied_learning_goals)
+            progression.append(
+                score
+            )
+
+            previous_successful_execution = execution
+            errors_before_succes.clear()
+        
+        return ProgressionWithDatetime(datetimes, progression)

@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from content_log.file_log import FileLog
+from content_log.progression.progression_with_datetime import ProgressionWithDatetime
 
 
 class WorkspaceLog:
@@ -8,7 +9,7 @@ class WorkspaceLog:
         self.file_logs = file_logs
 
         self.check_invariants()
-    
+
     def check_invariants(self):
         for file_log in self.file_logs:
             file_log.check_invariants()
@@ -50,7 +51,18 @@ class WorkspaceLog:
 
         if closest_file is None:
             raise ValueError("Time before first event")
-        
+
         return closest_file
 
-        
+    def get_learning_goal_progression(self, learning_goal):
+        """
+        Get the learning goal progression of the file logs
+        """
+
+        progression = ProgressionWithDatetime([], [])
+        for file_log in self.file_logs:
+            progression = progression.combine_through_addition(
+                file_log.get_learning_goal_progression(learning_goal)
+            )
+
+        return progression

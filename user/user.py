@@ -31,7 +31,7 @@ class User:
     def get_notebook_files(self):
         return self.notebook_files
 
-    def get_file_activities(self):
+    def get_file_activities(self) -> list[FileActivity]:
         activities: list[FileActivity] = []
 
         file_logs = self.workspace_log.get_file_logs()

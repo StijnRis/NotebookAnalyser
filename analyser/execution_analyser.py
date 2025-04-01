@@ -1,7 +1,8 @@
 import ast
-from difflib import unified_diff
+
 from analyser.analyser import Analyser
 from content_log.execution_log.execution_result import ExecutionErrorResult
+from processor.learning_goal.learning_goal import LearningGoal
 from user.user import User
 
 
@@ -10,8 +11,9 @@ class ExecutionAnalyser(Analyser):
     Generat report about the runtime errors
     """
 
-    def __init__(self):
+    def __init__(self, learning_goals: list[LearningGoal]):
         super().__init__()
+        self.learning_goals = learning_goals
 
     def analyse_user(self, user: User):
         username = user.get_username()
@@ -20,8 +22,7 @@ class ExecutionAnalyser(Analyser):
         file_logs = notebook_activity.get_file_logs()
 
         for file_log in file_logs:
-            file_execution_log = file_log.get_file_execution_log()
-            executions = file_execution_log.get_executions()
+            executions = file_log.get_file_execution_log().get_executions()
             file_path = file_log.get_path()
             code_versions_log = file_log.get_code_version_log()
 
@@ -45,14 +46,9 @@ class ExecutionAnalyser(Analyser):
 
                 differences = code_version.get_code_difference(previous_code_version)
 
-                lines_changed = code_version.get_changes_per_line(previous_code_version)
-                lines_changed = [line[1] for line in lines_changed if line[1] is not None]
-
-                new_ast_items = code_version.get_sub_ast(lines_changed)
-                new_ast_items_string = ast.dump(new_ast_items, indent=4)
-
-
-
+                applied_learning_goals = code_versions_log.get_learning_goals_applied_between(
+                    previous_successful_execution.get_time(), time, self.learning_goals
+                )
 
                 execution_data = {
                     "Username": username,
@@ -60,10 +56,15 @@ class ExecutionAnalyser(Analyser):
                     "Time": time,
                     "Code version": code_version.get_code(),
                     "Errors during making": "\n".join(
-                        [error.get_cleaned_traceback() for error in errors_before_succes]
+                        [
+                            error.get_error_name()
+                            for error in errors_before_succes
+                        ]
                     ),
                     "Differences": differences,
-                    "AST differences": new_ast_items_string,
+                    "Applied learning goals": ", ".join([
+                        learning_goal.name for learning_goal in applied_learning_goals
+                    ]),
                 }
 
                 self.data.append(execution_data)

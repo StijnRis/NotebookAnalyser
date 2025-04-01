@@ -1,7 +1,6 @@
 import ast
 from datetime import datetime
 from difflib import SequenceMatcher, ndiff, unified_diff
-from typing import Optional
 
 
 class SourceCode:
@@ -21,15 +20,19 @@ class SourceCode:
         except SyntaxError:
             return ast.Module(body=[], type_ignores=[])
 
-    def get_sub_ast(self, lines: list[int]) -> ast.Module:
+    def get_ast_of_lines(self, lines: list[int]) -> list[ast.AST]:
         body = []
         included_lines = []
         parsed_ast = self.get_ast()
         for node in ast.walk(parsed_ast):
-            if hasattr(node, "lineno") and node.lineno in lines and node.lineno not in included_lines:
+            if (
+                hasattr(node, "lineno")
+                and node.lineno in lines
+                and node.lineno not in included_lines
+            ):
                 body.append(node)
                 included_lines.append(node.lineno)
-        return ast.Module(body=body, type_ignores=[])
+        return body
 
     def get_code_difference_ratio(self, other: "SourceCode") -> float:
         """
@@ -55,12 +58,15 @@ class SourceCode:
         )
         return differences
 
-    def get_changes_per_line(self, original: "SourceCode") -> list[tuple[Optional[int], Optional[int], str]]:
+    def get_line_numbers_of_new_code(self, original: "SourceCode") -> list[int]:
+        """
+        Returns the lines numbers of the lines that were added in this file
+        """
         diff = ndiff(original.get_code().splitlines(), self.get_code().splitlines())
 
         original_line = 0
         new_line = 0
-        changes: list[tuple[Optional[int], Optional[int], str]] = []
+        changes: list[int] = []
 
         for line in diff:
             code = line[:2]
@@ -70,10 +76,18 @@ class SourceCode:
                 original_line += 1
                 new_line += 1
             elif code == "- ":  # Line removed from original
-                changes.append((original_line + 1, None, content.strip()))
                 original_line += 1
             elif code == "+ ":  # Line added in new file
-                changes.append((None, new_line + 1, content.strip()))
+                changes.append(new_line + 1)
                 new_line += 1
 
         return changes
+
+    def get_asts_of_new_code(self, original: "SourceCode") -> list[ast.AST]:
+        """
+        Returns the AST of the lines that were added in this file
+        """
+        lines = self.get_line_numbers_of_new_code(original)
+        return self.get_ast_of_lines(lines)
+    
+    
