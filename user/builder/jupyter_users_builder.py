@@ -16,16 +16,18 @@ class JupyterUsersBuilder:
         self,
         chat_message_analyser: ChatMessageAnalyser,
         execution_error_result_analyser: ExecutionErrorResultAnalyser,
-        verbose: bool = False,
     ):
         self.users_data = {}
         self.chat_message_analyser = chat_message_analyser
         self.execution_error_result_analyser = execution_error_result_analyser
-        self.verbose = verbose
         self.workspace_log_builder = JupyterWorkspaceLogBuilder(
             self.execution_error_result_analyser
         )
         self.chat_log_builder = JupyterChatLogBuilder(self.chat_message_analyser)
+        self.user_filter = None
+    
+    def apply_user_filter(self, user_filter: str):
+        self.user_filter = user_filter
 
     def get_user_data(self, username: str):
         if username not in self.users_data:
@@ -37,8 +39,7 @@ class JupyterUsersBuilder:
         return self.users_data[username]
 
     def load_log_directory(self, log_directory: str):
-        if self.verbose:
-            print("Loading users from directory")
+        print("Loading users from directory")
 
         # Extract all notebook logs
         for file_name in os.listdir(log_directory):
@@ -52,9 +53,7 @@ class JupyterUsersBuilder:
                 user_data["notebook_log_file_paths"].append(path)
 
     def load_volumes_directory(self, volumes_directory: str):
-
-        if self.verbose:
-            print("Finding users in volumes directory")
+        print("Finding users in volumes directory")
 
         # Extract all chat logs and notebooks
         for folder_name in os.listdir(volumes_directory):
@@ -62,8 +61,7 @@ class JupyterUsersBuilder:
             if os.path.isdir(path) and not folder_name.startswith("_"):
                 username = folder_name
 
-                if self.verbose:
-                    print(f"Finding data of user {username}")
+                print(f"Finding data of user {username}")
 
                 user_data = self.get_user_data(username)
                 for file_name in os.listdir(path):
@@ -84,25 +82,34 @@ class JupyterUsersBuilder:
 
         # Load data into objects
         for username, user_data in self.users_data.items():
-            if self.verbose:
-                print(f"Loading user {username}: ")
-                print(f"  {len(user_data['chat_log_file_paths'])} chat log files")
-                print(
-                    f"  {len(user_data['notebook_log_file_paths'])} notebook log files"
+            if self.user_filter and username != self.user_filter:
+                print(f"Skipping user {username} due to filter")
+                continue
+
+            print(f"Loading user {username}: ")
+            print(f"  {len(user_data['chat_log_file_paths'])} chat log files")
+            print(
+                f"  {len(user_data['notebook_log_file_paths'])} notebook log files"
+            )
+            print(f"  {len(user_data['notebook_file_paths'])} notebook files")
+
+            try:
+                self.workspace_log_builder.load_files(
+                    user_data["notebook_log_file_paths"]
                 )
-                print(f"  {len(user_data['notebook_file_paths'])} notebook files")
+                workspace_log = self.workspace_log_builder.build()
 
-            self.workspace_log_builder.load_files(user_data["notebook_log_file_paths"])
-            workspace_log = self.workspace_log_builder.build()
+                notebook_files = user_data["notebook_file_paths"]
 
-            notebook_files = user_data["notebook_file_paths"]
+                self.chat_log_builder.load_files(user_data["chat_log_file_paths"])
+                chat_log = self.chat_log_builder.build()
 
-            self.chat_log_builder.load_files(user_data["chat_log_file_paths"])
-            chat_log = self.chat_log_builder.build()
+                user = User(username, chat_log, workspace_log, notebook_files)
 
-            user = User(username, chat_log, workspace_log, notebook_files)
-
-            users.append(user)
+                users.append(user)
+            except Exception as e:
+                print(f"Error loading user {username}: {e}")
+                continue
 
         self.users_data = {}
 

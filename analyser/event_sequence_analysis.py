@@ -34,5 +34,5 @@ class EventSequenceAnalysis(Analyser):
         for item in self.data:
             ordered_keys = ["from_event"] + sorted(k for k in all_keys if k != "from_event")
             ordered_item = {key: item[key] for key in ordered_keys}
-            item.clear()
+            item = {}
             item.update(ordered_item)

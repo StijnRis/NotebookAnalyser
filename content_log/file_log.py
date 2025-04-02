@@ -165,6 +165,6 @@ class FileLog:
             )
 
             previous_successful_execution = execution
-            errors_before_succes.clear()
+            errors_before_succes = []
         
         return ProgressionWithDatetime(datetimes, progression)

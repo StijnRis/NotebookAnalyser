@@ -70,4 +70,4 @@ class ExecutionAnalyser(Analyser):
                 self.data.append(execution_data)
 
                 previous_successful_execution = execution
-                errors_before_succes.clear()
+                errors_before_succes = []

@@ -38,6 +38,8 @@ from processor.learning_goal.variable_assignment_learning_goal import (
 from processor.learning_goal.while_loop_learning_goal import WhileLoopLearningGoal
 from report.report_generator import ReportGenerator
 from user.builder.jupyter_users_builder import JupyterUsersBuilder
+import os
+from dotenv import load_dotenv
 
 
 class Processor:
@@ -90,13 +92,17 @@ class Processor:
             r"W:\staff-umbrella\DataStorageJELAI\StanislasExperimentData\Backup_2025_02_26\volumes",
         ]
 
-        data_location = all_data_location
+        data_location = small_sample_data_location
 
         builder = JupyterUsersBuilder(
             self.chat_message_analyser,
-            self.execution_error_result_analyser,
-            verbose=True,
+            self.execution_error_result_analyser
         )
+
+        username = os.getenv("FILTER_USERNAME")
+        if username:
+            builder.apply_user_filter(username)
+
         builder.load_log_directory(data_location[0])
         builder.load_volumes_directory(data_location[1])
         self.users = builder.build()

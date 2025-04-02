@@ -210,6 +210,7 @@ class JupyterWorkspaceLogBuilder:
     def load_code_files(self, data: dict):
         if (
             "notebookState" not in data
+            or "notebookContent" not in data["notebookState"]
             or data["notebookState"]["notebookContent"] is None
         ):
             return
