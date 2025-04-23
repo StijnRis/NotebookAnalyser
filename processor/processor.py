@@ -1,3 +1,6 @@
+import os
+from datetime import datetime
+
 from analyser.analyser import Analyser
 from analyser.code_file_analyser import CodeFileAnalyser
 from analyser.event_sequence_analysis import EventSequenceAnalysis
@@ -38,8 +41,6 @@ from processor.learning_goal.variable_assignment_learning_goal import (
 from processor.learning_goal.while_loop_learning_goal import WhileLoopLearningGoal
 from report.report_generator import ReportGenerator
 from user.builder.jupyter_users_builder import JupyterUsersBuilder
-import os
-from dotenv import load_dotenv
 
 
 class Processor:
@@ -70,12 +71,12 @@ class Processor:
 
         self.analysers: list[Analyser] = [
             UserAnalyser(),
-            # CodeFileAnalyser(),
+            CodeFileAnalyser(),
             EventSequenceAnalysis(),
-            # FileActivityAnalyser(),
+            FileActivityAnalyser(),
             QuestionAnalyser(),
             InteractionAnalyser(),
-            # ExecutionAnalyser(self.learning_goals),
+            ExecutionAnalyser(self.learning_goals),
             LearningGoalsAnalyser(self.learning_goals),
         ]
 
@@ -95,8 +96,7 @@ class Processor:
         data_location = small_sample_data_location
 
         builder = JupyterUsersBuilder(
-            self.chat_message_analyser,
-            self.execution_error_result_analyser
+            self.chat_message_analyser, self.execution_error_result_analyser
         )
 
         username = os.getenv("FILTER_USERNAME")
@@ -108,7 +108,8 @@ class Processor:
         self.users = builder.build()
 
     def run(self):
-        file_path = "output/analysed_activities.xlsx"
+        current_date = datetime.now().strftime("%Y_%m_%d")
+        file_path = f"output/analyses_{current_date}.xlsx"
         report_generator = ReportGenerator(file_path)
 
         # Analyze users
@@ -120,10 +121,6 @@ class Processor:
                 analyser.analyse_user(user)
                 # except Exception as e:
                 #     print(f"Error processing user {user.username}: {e}")
-
-        # print("Analyzing event sequences")
-        # event_sequence_analyser = EventSequenceAnalysis(self.users)
-        # event_sequence_analyser.generate_report()
 
         print("Generating report")
         for analyser in self.analysers:

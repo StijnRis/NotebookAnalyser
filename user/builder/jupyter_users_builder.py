@@ -27,6 +27,7 @@ class JupyterUsersBuilder:
         self.user_filter = None
     
     def apply_user_filter(self, user_filter: str):
+        print(f"Applying user filter: {user_filter}")
         self.user_filter = user_filter
 
     def get_user_data(self, username: str):

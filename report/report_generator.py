@@ -31,6 +31,14 @@ def is_list_of_tuple_datetime_datetime(data):
         for item in data
     )
 
+def shorten_string(string: str, length: int):
+    new_string = ""
+    pos = 0
+    string_length = len(string)
+    while pos < len(string):
+        new_string += string[pos]
+        pos += max(1, (string_length - pos) // (length - len(new_string)))
+    return new_string
 
 class ReportGenerator:
     def __init__(self, file_path: str):
@@ -131,11 +139,11 @@ class ReportGenerator:
     ):
         # Create the worksheets for keys with multiple values
         worksheet_name = worksheet.name
-        x_name = f"x {worksheet_name} - {column_name}"[:31]
-        Y_name = f"y {worksheet_name} - {column_name}"[:31]
-        worksheet_x = self.workbook.add_worksheet()
+        x_name = shorten_string(f"x {worksheet_name} - {column_name}", 31)
+        y_name = shorten_string(f"y {worksheet_name} - {column_name}", 31)
+        worksheet_x = self.workbook.add_worksheet(x_name)
         worksheet_x.hide()
-        worksheet_y = self.workbook.add_worksheet()
+        worksheet_y = self.workbook.add_worksheet(y_name)
         worksheet_y.hide()
 
         # Save data
@@ -166,11 +174,11 @@ class ReportGenerator:
     ):
         # Create the worksheets for keys with multiple values
         worksheet_name = worksheet.name
-        x_name = f"x {worksheet_name} - {column_name}"[:31]
-        Y_name = f"y {worksheet_name} - {column_name}"[:31]
-        worksheet_x = self.workbook.add_worksheet()
+        x_name = shorten_string(f"x {worksheet_name} - {column_name}", 31)
+        y_name = shorten_string(f"y {worksheet_name} - {column_name}", 31)
+        worksheet_x = self.workbook.add_worksheet(x_name)
         worksheet_x.hide()
-        worksheet_y = self.workbook.add_worksheet()
+        worksheet_y = self.workbook.add_worksheet(y_name)
         worksheet_y.hide()
 
         # Save data
@@ -202,11 +210,11 @@ class ReportGenerator:
     ):
         # Create the worksheets for keys with multiple values
         worksheet_name = worksheet.name
-        x_name = f"x {worksheet_name} - {column_name}"[:31]
-        Y_name = f"y {worksheet_name} - {column_name}"[:31]
-        worksheet_x = self.workbook.add_worksheet()
+        x_name = shorten_string(f"x {worksheet_name} - {column_name}", 31)
+        y_name = shorten_string(f"y {worksheet_name} - {column_name}", 31)
+        worksheet_x = self.workbook.add_worksheet(x_name)
         worksheet_x.hide()
-        worksheet_y = self.workbook.add_worksheet()
+        worksheet_y = self.workbook.add_worksheet(y_name)
         worksheet_y.hide()
 
         # Save data
