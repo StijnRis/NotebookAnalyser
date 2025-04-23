@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Sequence
 
 import xlsxwriter
 from xlsxwriter.utility import xl_col_to_name
+
+from report.sheet import Sheet
 
 
 def is_list_of_tuple_float_float(data):
@@ -23,6 +24,7 @@ def is_list_of_tuple_float_bool(data):
         for item in data
     )
 
+
 def is_list_of_tuple_datetime_datetime(data):
     return isinstance(data, list) and all(
         isinstance(item, tuple)
@@ -30,6 +32,7 @@ def is_list_of_tuple_datetime_datetime(data):
         and (isinstance(item[0], datetime) or isinstance(item[1], datetime))
         for item in data
     )
+
 
 def shorten_string(string: str, length: int):
     new_string = ""
@@ -40,44 +43,15 @@ def shorten_string(string: str, length: int):
         pos += max(1, (string_length - pos) // (length - len(new_string)))
     return new_string
 
+
 class ReportGenerator:
     def __init__(self, file_path: str):
         self.workbook = xlsxwriter.Workbook(file_path, {"nan_inf_to_errors": True})
 
-    def display_data(self, worksheet_name: str, data: list[dict]):
-        # Check that all have same keys
-        keys = list(data[0].keys())
-        for item in data:
-            assert keys == list(item.keys()), "All items must have the same keys"
+    def display_sheet(self, sheet: Sheet):
 
-        # Create the main worksheet
-        main_worksheet = self.workbook.add_worksheet(worksheet_name)
+        sheet.write_to_workbook(self.workbook)
 
-        # Setup header format
-        header_format = self.workbook.add_format()
-        header_format.set_bold(True)
-        header_format.set_align("center")
-        header_format.set_align("vcenter")
-        header_format.set_rotation(45)
-
-        # Write headers
-        main_worksheet.set_row(0, 80, header_format)
-        for i, key in enumerate(keys):
-            main_worksheet.write(0, i, key)
-        main_worksheet.freeze_panes(1, 0)
-
-        # Format the entire worksheet as a table
-        column_settings = [{"header": key} for key in keys]
-        main_worksheet.add_table(
-            0,
-            0,
-            len(data),
-            len(keys) - 1,
-            {"columns": column_settings, "style": "Table Style Medium 9"},
-        )
-
-        # Write data
-        self.write_columns(main_worksheet, data)
 
     def write_columns(
         self, worksheet: xlsxwriter.Workbook.worksheet_class, data: list[dict]
@@ -164,7 +138,7 @@ class ReportGenerator:
 
         # Apply format to multi-valued columns
         worksheet.set_column(column_nr, column_nr, 20)
-    
+
     def write_column_with_list_of_tuple_float_bool(
         self,
         worksheet: xlsxwriter.Workbook.worksheet_class,
@@ -200,7 +174,7 @@ class ReportGenerator:
 
         # Apply format to multi-valued columns
         worksheet.set_column(column_nr, column_nr, 20)
-    
+
     def write_column_with_list_of_tuple_datetime_datetime(
         self,
         worksheet: xlsxwriter.Workbook.worksheet_class,
@@ -219,7 +193,11 @@ class ReportGenerator:
 
         # Save data
         for row, item_list in enumerate(column_data):
-            offset = min([min(item) for item in item_list]) if (len(item_list) > 0) else datetime.fromtimestamp(0)
+            offset = (
+                min([min(item) for item in item_list])
+                if (len(item_list) > 0)
+                else datetime.fromtimestamp(0)
+            )
             for column, item in enumerate(item_list):
                 start = (item[0] - offset).total_seconds()
                 end = (item[1] - offset).total_seconds()

@@ -1,19 +1,30 @@
-import ast
-
 from analyser.analyser import Analyser
 from content_log.execution_log.execution_result import ExecutionErrorResult
 from processor.learning_goal.learning_goal import LearningGoal
+from report.column.datetime_column import DatetimeColumn
+from report.column.text_column import TextColumn
 from user.user import User
 
 
 class ExecutionAnalyser(Analyser):
     """
-    Generat report about the runtime errors
+    Generate report about the runtime errors
     """
 
     def __init__(self, learning_goals: list[LearningGoal]):
         super().__init__()
         self.learning_goals = learning_goals
+        self.sheet.add_columns(
+            [
+                TextColumn("Username"),
+                TextColumn("File"),
+                DatetimeColumn("Time"),
+                TextColumn("Code version"),
+                TextColumn("Errors during making"),
+                TextColumn("Differences"),
+                TextColumn("Applied learning goals"),
+            ]
+        )
 
     def analyse_user(self, user: User):
         username = user.get_username()
@@ -46,28 +57,32 @@ class ExecutionAnalyser(Analyser):
 
                 differences = code_version.get_code_difference(previous_code_version)
 
-                applied_learning_goals = code_versions_log.get_learning_goals_applied_between(
-                    previous_successful_execution.get_time(), time, self.learning_goals
+                applied_learning_goals = (
+                    code_versions_log.get_learning_goals_applied_between(
+                        previous_successful_execution.get_time(),
+                        time,
+                        self.learning_goals,
+                    )
                 )
 
-                execution_data = {
-                    "Username": username,
-                    "File": file_path,
-                    "Time": time,
-                    "Code version": code_version.get_code(),
-                    "Errors during making": "\n".join(
-                        [
-                            error.get_error_name()
-                            for error in errors_before_succes
-                        ]
-                    ),
-                    "Differences": differences,
-                    "Applied learning goals": ", ".join([
-                        learning_goal.name for learning_goal in applied_learning_goals
-                    ]),
-                }
-
-                self.data.append(execution_data)
+                self.sheet.add_row(
+                    {
+                        "Username": username,
+                        "File": file_path,
+                        "Time": time,
+                        "Code version": code_version.get_code(),
+                        "Errors during making": "\n".join(
+                            [error.get_error_name() for error in errors_before_succes]
+                        ),
+                        "Differences": differences,
+                        "Applied learning goals": ", ".join(
+                            [
+                                learning_goal.name
+                                for learning_goal in applied_learning_goals
+                            ]
+                        ),
+                    }
+                )
 
                 previous_successful_execution = execution
                 errors_before_succes = []

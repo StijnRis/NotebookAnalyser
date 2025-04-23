@@ -1,4 +1,6 @@
 from analyser.analyser import Analyser
+from report.column.numeric_column import NumericColumn
+from report.column.text_column import TextColumn
 from user.user import User
 
 
@@ -9,9 +11,14 @@ class UserAnalyser(Analyser):
 
     def __init__(self):
         super().__init__()
+        self.sheet.add_columns([
+            TextColumn("Username"),
+            NumericColumn("Message count"),
+            NumericColumn("File count"),
+        ])
 
     def analyse_user(self, user: User):
-        user_data = {
+        self.sheet.add_row({
             "Username": user.username,
             "Message count": user.get_chat_log().get_amount_of_messages(),
             "File count": user.get_workspace_log().get_amount_of_files(),
@@ -20,6 +27,4 @@ class UserAnalyser(Analyser):
             # "Tab switches": user.get_workspace_log().get_amount_of_tab_switches(),
             # "Executions": user.get_workspace_log().get_amount_of_executions(),
             # "Runtime errors": user.get_workspace_log().get_amount_of_runtime_errors(),
-        }
-
-        self.data.append(user_data)
+        })

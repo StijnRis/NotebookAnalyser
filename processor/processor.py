@@ -3,7 +3,6 @@ from datetime import datetime
 
 from analyser.analyser import Analyser
 from analyser.code_file_analyser import CodeFileAnalyser
-from analyser.event_sequence_analysis import EventSequenceAnalysis
 from analyser.execution_analyser import ExecutionAnalyser
 from analyser.file_activity_analyser import FileActivityAnalyser
 from analyser.interaction_analyser import InteractionAnalyser
@@ -72,7 +71,7 @@ class Processor:
         self.analysers: list[Analyser] = [
             UserAnalyser(),
             CodeFileAnalyser(),
-            EventSequenceAnalysis(),
+            # EventSequenceAnalysis(),
             FileActivityAnalyser(),
             QuestionAnalyser(),
             InteractionAnalyser(),
@@ -83,6 +82,16 @@ class Processor:
         self.load_users()
 
     def load_users(self):
+        local_data_location = {
+            "logs": [
+                r"C:\University\Honours\Data (temp)\All data with consent\logs from around 2025-03-13 until 2025-04-22",
+                r"C:\University\Honours\Data (temp)\All data with consent\logs from start until 2025-03-09",
+            ],
+            "volumes": [
+                r"C:\University\Honours\Data (temp)\All data with consent\volumes",
+            ],
+        }
+
         small_sample_data_location = [
             r"W:\staff-umbrella\DataStorageJELAI\StanislasExperimentData\Small_sample_of_data\logs",
             r"W:\staff-umbrella\DataStorageJELAI\StanislasExperimentData\Small_sample_of_data\volumes",
@@ -93,7 +102,7 @@ class Processor:
             r"W:\staff-umbrella\DataStorageJELAI\StanislasExperimentData\Backup_2025_02_26\volumes",
         ]
 
-        data_location = small_sample_data_location
+        data_location = local_data_location
 
         builder = JupyterUsersBuilder(
             self.chat_message_analyser, self.execution_error_result_analyser
@@ -103,8 +112,10 @@ class Processor:
         if username:
             builder.apply_user_filter(username)
 
-        builder.load_log_directory(data_location[0])
-        builder.load_volumes_directory(data_location[1])
+        for log_dir in data_location["logs"]:
+            builder.load_log_directory(log_dir)
+        for volume_dir in data_location["volumes"]:
+            builder.load_volumes_directory(volume_dir)
         self.users = builder.build()
 
     def run(self):
@@ -128,4 +139,5 @@ class Processor:
 
         report_generator.close()
 
+        print(f"Report saved to {file_path}")
         print("Analysis completed.")

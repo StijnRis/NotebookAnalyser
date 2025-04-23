@@ -33,7 +33,7 @@ class ChatbotChatMessageAnalyser(ChatMessageAnalyser):
         for i in range(3):
             detected_types = []
             for question_type in QuestionType:
-                if question_type.name in response:
+                if question_type.name.lower() in response.lower():
                     detected_types.append(question_type)
 
             if len(detected_types) == 1:
