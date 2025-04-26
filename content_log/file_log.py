@@ -6,10 +6,16 @@ from content_log.event_log.events_log import EditingLog
 from content_log.execution_log.execution_result import ExecutionErrorResult
 from content_log.execution_log.file_execution_log import FileExecutionLog
 from content_log.progression.progression_with_datetime import ProgressionWithDatetime
+from event_log.event import Event
+from event_log.event_log import EventLog
 from processor.learning_goal.learning_goal import LearningGoal
 
 
-class FileLog:
+class FileLog(EventLog):
+    """
+    A collection of logs related to a single file.
+    """
+
     def __init__(
         self,
         path: str,
@@ -29,6 +35,20 @@ class FileLog:
         self.editing_log.check_invariants()
         self.code_version_log.check_invariants()
         self.file_execution_log.check_invariants()
+    
+    # TODO add code version log to it
+    def get_events(self):
+        """
+        Get all (time, event_type) pairs of the file log
+        """
+        sequence: list[Event] = []
+
+        sequence.extend(self.editing_log.get_events())
+        sequence.extend(self.file_execution_log.get_events())
+
+        sequence.sort(key=lambda x: x.get_time())
+
+        return sequence
 
     def get_path(self) -> str:
         return self.path
@@ -69,27 +89,6 @@ class FileLog:
         time3 = self.file_execution_log.get_end_time()
 
         return max(time1, time2, time3)
-
-    def get_active_periods(self) -> list[tuple[datetime, datetime]]:
-        event_sequence = self.get_event_sequence()
-
-        active_periods: list[tuple[datetime, datetime]] = []
-        start_time = None
-        previous_time = None
-        for event in event_sequence:
-            event_time = event[0]
-            if start_time is None or previous_time is None:
-                start_time = event_time
-            elif (event_time - previous_time) > self.idle_threshold:
-                active_periods.append((start_time, event_time))
-                start_time = None
-
-            previous_time = event_time
-
-        if start_time is not None:
-            active_periods.append((start_time, event_sequence[-1][0]))
-
-        return active_periods
 
     def get_event_sequence(self) -> list[tuple[datetime, str]]:
         editing_sequence = self.editing_log.get_event_sequence()

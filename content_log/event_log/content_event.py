@@ -1,8 +1,10 @@
 from abc import ABC
 from datetime import datetime
 
+from event_log.event import Event
 
-class ContentEvent(ABC):
+
+class ContentEvent(Event, ABC):
     def __init__(self, event_time: datetime):
         self.event_time = event_time
 

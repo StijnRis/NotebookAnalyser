@@ -8,6 +8,7 @@ from content_log.execution_log.analyser.execution_error_result_analyser import (
 )
 from user.user import User
 from user.users import Users
+import traceback
 
 
 class JupyterUsersBuilder:
@@ -110,6 +111,7 @@ class JupyterUsersBuilder:
                 users.append(user)
             except Exception as e:
                 print(f"Error loading user {username}: {e}")
+                traceback.print_exc()
                 continue
 
         self.users_data = {}

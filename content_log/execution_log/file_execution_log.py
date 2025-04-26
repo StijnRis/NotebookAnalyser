@@ -25,6 +25,9 @@ class FileExecutionLog:
 
     def get_executions(self) -> list[ExecutionResult]:
         return self.executions
+    
+    def get_events(self) -> list[ExecutionResult]:
+        return self.executions
 
     def get_runtime_errors(self) -> list[ExecutionErrorResult]:
         runtime_errors = []

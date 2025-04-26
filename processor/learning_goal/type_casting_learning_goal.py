@@ -7,14 +7,13 @@ class TypeCastingLearningGoal(LearningGoal):
     def __init__(self):
         super().__init__("Type casting", "Operation involving data types.")
 
-    def count_applications_in(self, code: ast.AST) -> int:
-        count = 0
-        for node in ast.walk(code):
-            if (
-                isinstance(node, ast.Call)
-                and isinstance(node.func, ast.Name)
-                and node.func.id
-                in {"int", "float", "str", "bool", "list", "dict", "set", "tuple"}
-            ):
-                count += 1
-        return count
+    def is_applied_in(self, code: ast.AST) -> bool:
+        """
+        Checks if the learning goal is applied in the code. Does not check childs of the ast node.
+        """
+        return (
+            isinstance(code, ast.Call)
+            and isinstance(code.func, ast.Name)
+            and code.func.id
+            in {"int", "float", "str", "bool", "list", "dict", "set", "tuple"}
+        )

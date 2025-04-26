@@ -8,9 +8,10 @@ from content_log.execution_log.analyser.execution_error_result_analyser import (
     ExecutionErrorResultAnalyser,
     LearningGoal,
 )
+from event_log.event import Event
 
 
-class ExecutionResult(ABC):
+class ExecutionResult(Event, ABC):
     def __init__(self, time: datetime):
         self.time = time
 

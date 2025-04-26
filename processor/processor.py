@@ -14,6 +14,9 @@ from chatbot import Chatbot
 from content_log.execution_log.analyser.chatbot_execution_error_result_analyser import (
     ChatbotExecutionErrorResultAnalyser,
 )
+from processor.learning_goal.break_statement_learning_goal import (
+    BreakStatementLearningGoal,
+)
 from processor.learning_goal.for_loop_learning_goal import ForLoopLearningGoal
 from processor.learning_goal.function_call_learning_goal import FunctionCallLearningGoal
 from processor.learning_goal.function_definition_learning_goal import (
@@ -62,6 +65,7 @@ class Processor:
             ImportStatementLearningGoal(),
             TypeCastingLearningGoal(),
             PrintStatementLearningGoal(),
+            BreakStatementLearningGoal(),
         ]
 
         self.execution_error_result_analyser = ChatbotExecutionErrorResultAnalyser(
@@ -70,12 +74,12 @@ class Processor:
 
         self.analysers: list[Analyser] = [
             UserAnalyser(),
-            CodeFileAnalyser(),
+            # CodeFileAnalyser(),
             # EventSequenceAnalysis(),
-            FileActivityAnalyser(),
-            QuestionAnalyser(),
-            InteractionAnalyser(),
-            ExecutionAnalyser(self.learning_goals),
+            # FileActivityAnalyser(),
+            # QuestionAnalyser(),
+            # InteractionAnalyser(),
+            # ExecutionAnalyser(self.learning_goals),
             LearningGoalsAnalyser(self.learning_goals),
         ]
 

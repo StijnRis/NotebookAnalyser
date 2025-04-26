@@ -22,16 +22,13 @@ class SourceCode:
 
     def get_ast_of_lines(self, lines: list[int]) -> list[ast.AST]:
         body = []
-        included_lines = []
         parsed_ast = self.get_ast()
         for node in ast.walk(parsed_ast):
             if (
                 hasattr(node, "lineno")
                 and node.lineno in lines
-                and node.lineno not in included_lines
             ):
                 body.append(node)
-                included_lines.append(node.lineno)
         return body
 
     def get_code_difference_ratio(self, other: "SourceCode") -> float:

@@ -44,7 +44,7 @@ class JupyterChatLogBuilder(ChatLogBuilder):
         self.messages.extend(messages)
 
     def build(self):
-        chat_log = ChatLog(self.messages, self.chat_message_analyser)
+        chat_log = ChatLog(self.messages)
 
         self.messages = []
 

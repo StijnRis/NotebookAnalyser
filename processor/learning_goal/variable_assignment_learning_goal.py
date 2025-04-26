@@ -1,4 +1,5 @@
 import ast
+
 from processor.learning_goal.learning_goal import LearningGoal
 
 
@@ -6,12 +7,8 @@ class VariableAssignmentLearningGoal(LearningGoal):
     def __init__(self):
         super().__init__("Variable assignment", "Assigning values to variables.")
 
-    def count_applications_in(self, code: ast.AST) -> int:
+    def is_applied_in(self, code: ast.AST) -> bool:
         """
-        Count how many times a variable assignment is used in the code
+        Checks if the learning goal is applied in the code. Does not check childs of the ast node.
         """
-        count = 0
-        for node in ast.walk(code):
-            if isinstance(node, ast.Assign):
-                count += 1
-        return count
+        return isinstance(code, (ast.Assign, ast.AugAssign))

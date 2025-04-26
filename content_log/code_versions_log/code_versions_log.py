@@ -107,8 +107,7 @@ class CodeVersionsLog:
         learning_goals_in_ast = []
         for ast_item in new_ast_items:
             for goal in learning_goals:
-                times = goal.count_applications_in(ast_item)
-                for i in range(times):
+                if goal.is_applied_in(ast_item):
                     learning_goals_in_ast.append(goal)
 
         return learning_goals_in_ast

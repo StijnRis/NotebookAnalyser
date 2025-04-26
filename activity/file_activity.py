@@ -1,7 +1,7 @@
 from datetime import datetime
 from difflib import SequenceMatcher
 
-from chat_log.chat_activity import ChatActivity
+from chat_log.chat_log import ChatLog
 from content_log.file_log import FileLog
 
 
@@ -13,7 +13,7 @@ class FileActivity:
     def __init__(
         self,
         file_log: FileLog,
-        chat_activity: ChatActivity,
+        chat_activity: ChatLog,
     ):
         self.file_log = file_log
         self.chat_activity = chat_activity

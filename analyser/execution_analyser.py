@@ -2,6 +2,7 @@ from analyser.analyser import Analyser
 from content_log.execution_log.execution_result import ExecutionErrorResult
 from processor.learning_goal.learning_goal import LearningGoal
 from report.column.datetime_column import DatetimeColumn
+from report.column.multiline_text_column import MultilineTextColumn
 from report.column.text_column import TextColumn
 from user.user import User
 
@@ -18,11 +19,12 @@ class ExecutionAnalyser(Analyser):
             [
                 TextColumn("Username"),
                 TextColumn("File"),
-                DatetimeColumn("Time"),
-                TextColumn("Code version"),
+                DatetimeColumn("Start time"),
+                DatetimeColumn("End time"),
+                MultilineTextColumn("Final code version"),
                 TextColumn("Errors during making"),
-                TextColumn("Differences"),
-                TextColumn("Applied learning goals"),
+                MultilineTextColumn("Changes made"),
+                MultilineTextColumn("Applied learning goals"),
             ]
         )
 
@@ -48,19 +50,20 @@ class ExecutionAnalyser(Analyser):
                     previous_successful_execution = execution
                     continue
 
-                time = execution.get_time()
-                code_version = code_versions_log.get_code_file_at(time)
+                end_time = execution.get_time()
+                end_code_version = code_versions_log.get_code_file_at(end_time)
 
                 previous_code_version = code_versions_log.get_code_file_at(
                     previous_successful_execution.get_time()
                 )
 
-                differences = code_version.get_code_difference(previous_code_version)
+                differences = end_code_version.get_code_difference(previous_code_version)
 
+                start_time = previous_successful_execution.get_time()
                 applied_learning_goals = (
                     code_versions_log.get_learning_goals_applied_between(
-                        previous_successful_execution.get_time(),
-                        time,
+                        start_time,
+                        end_time,
                         self.learning_goals,
                     )
                 )
@@ -69,12 +72,13 @@ class ExecutionAnalyser(Analyser):
                     {
                         "Username": username,
                         "File": file_path,
-                        "Time": time,
-                        "Code version": code_version.get_code(),
+                        "Start time": start_time,
+                        "End time": end_time,
+                        "Final code version": end_code_version.get_code(),
                         "Errors during making": "\n".join(
                             [error.get_error_name() for error in errors_before_succes]
                         ),
-                        "Differences": differences,
+                        "Changes made": differences,
                         "Applied learning goals": ", ".join(
                             [
                                 learning_goal.name

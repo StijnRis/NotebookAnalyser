@@ -2,13 +2,32 @@ from datetime import datetime
 
 from content_log.file_log import FileLog
 from content_log.progression.progression_with_datetime import ProgressionWithDatetime
+from event_log.event import Event
+from event_log.event_log import EventLog
 
 
-class WorkspaceLog:
+class WorkspaceLog(EventLog):
+    """
+    A collection of file logs
+    """
+
     def __init__(self, file_logs: list[FileLog]):
         self.file_logs = file_logs
 
         self.check_invariants()
+    
+    def get_events(self) -> list[Event]:
+        """
+        Get all (time, event_type) pairs of the file log
+        """
+        sequence: list[Event] = []
+
+        for file_log in self.file_logs:
+            sequence.extend(file_log.get_events())
+
+        sequence.sort(key=lambda x: x.get_time())
+
+        return sequence
 
     def check_invariants(self):
         for file_log in self.file_logs:

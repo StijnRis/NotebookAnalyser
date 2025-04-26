@@ -6,10 +6,13 @@ def main():
     processor = Processor()
     processor.run()
 
-if __name__ == "__main__":
+def profile():
     cProfile.run("main()", sort="time", filename="output/profile.prof")
 
     stats = pstats.Stats("output/profile.prof")
     stats.strip_dirs()
     stats.sort_stats("cumtime")
     stats.print_stats(100)
+
+if __name__ == "__main__":
+    profile()

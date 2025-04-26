@@ -7,9 +7,8 @@ class FunctionDefinitionLearningGoal(LearningGoal):
     def __init__(self):
         super().__init__("Function definition", "Error with a function definition.")
 
-    def count_applications_in(self, code: ast.AST) -> int:
-        count = 0
-        for node in ast.walk(code):
-            if isinstance(node, ast.FunctionDef):
-                count += 1
-        return count
+    def is_applied_in(self, code: ast.AST) -> bool:
+        """
+        Checks if the learning goal is applied in the code. Does not check childs of the ast node.
+        """
+        return isinstance(code, ast.FunctionDef)

@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from activity.file_activity import FileActivity
-from chat_log.chat_activity import ChatActivity
 from chat_log.chat_log import ChatLog
 from content_log.workspace_log import WorkspaceLog
 
@@ -38,15 +37,16 @@ class User:
         for file_log in file_logs:
             messages = []
             users = {}
-            for start_time, end_time in file_log.get_editing_log().get_editing_periods():
+            for (
+                start_time,
+                end_time,
+            ) in file_log.get_editing_log().get_editing_periods():
                 activity = self.chat_log.get_activity_between(
                     start_time,
                     end_time,
                 )
                 messages.extend(activity.messages)
-            activities.append(
-                FileActivity(file_log, ChatActivity(messages))
-            )
+            activities.append(FileActivity(file_log, ChatLog(messages)))
 
         return activities
 

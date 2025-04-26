@@ -7,9 +7,8 @@ class ImportStatementLearningGoal(LearningGoal):
     def __init__(self):
         super().__init__("Import statement", "Error with an import statement.")
 
-    def count_applications_in(self, code: ast.AST) -> int:
-        count = 0
-        for node in ast.walk(code):
-            if isinstance(node, ast.Import) or isinstance(node, ast.ImportFrom):
-                count += 1
-        return count
+    def is_applied_in(self, code: ast.AST) -> bool:
+        """
+        Checks if the learning goal is applied in the code. Does not check childs of the ast node.
+        """
+        return isinstance(code, ast.Import) or isinstance(code, ast.ImportFrom)

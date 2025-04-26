@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod
 import ast
+from abc import ABC, abstractmethod
 
 
 class LearningGoal(ABC):
@@ -8,8 +8,8 @@ class LearningGoal(ABC):
         self.description = description
 
     @abstractmethod
-    def count_applications_in(self, code: ast.AST) -> int:
+    def is_applied_in(self, code: ast.AST) -> bool:
         """
-        Count how many times the learning goal is applied in the code
+        Checks if the learning goal is applied in the code. Does not check childs of the ast node.
         """
         pass
