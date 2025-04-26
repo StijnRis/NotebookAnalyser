@@ -2,12 +2,7 @@ import os
 from datetime import datetime
 
 from analyser.analyser import Analyser
-from analyser.code_file_analyser import CodeFileAnalyser
-from analyser.execution_analyser import ExecutionAnalyser
-from analyser.file_activity_analyser import FileActivityAnalyser
-from analyser.interaction_analyser import InteractionAnalyser
 from analyser.learning_goals_analyser import LearningGoalsAnalyser
-from analyser.question_analyser import QuestionAnalyser
 from analyser.user_analyser import UserAnalyser
 from chat_log.analyser.chatbot_chat_message_analyser import ChatbotChatMessageAnalyser
 from chatbot import Chatbot
@@ -86,27 +81,6 @@ class Processor:
         self.load_users()
 
     def load_users(self):
-        local_data_location = {
-            "logs": [
-                r"C:\University\Honours\Data (temp)\All data with consent\logs from around 2025-03-13 until 2025-04-22",
-                r"C:\University\Honours\Data (temp)\All data with consent\logs from start until 2025-03-09",
-            ],
-            "volumes": [
-                r"C:\University\Honours\Data (temp)\All data with consent\volumes",
-            ],
-        }
-
-        small_sample_data_location = [
-            r"W:\staff-umbrella\DataStorageJELAI\StanislasExperimentData\Small_sample_of_data\logs",
-            r"W:\staff-umbrella\DataStorageJELAI\StanislasExperimentData\Small_sample_of_data\volumes",
-        ]
-
-        all_data_location = [
-            r"W:\staff-umbrella\DataStorageJELAI\StanislasExperimentData\Backup_2025_02_26\logs",
-            r"W:\staff-umbrella\DataStorageJELAI\StanislasExperimentData\Backup_2025_02_26\volumes",
-        ]
-
-        data_location = local_data_location
 
         builder = JupyterUsersBuilder(
             self.chat_message_analyser, self.execution_error_result_analyser
@@ -116,9 +90,20 @@ class Processor:
         if username:
             builder.apply_user_filter(username)
 
-        for log_dir in data_location["logs"]:
+        logs_data_locations = os.getenv("LOGS_DATA_LOCATION")
+        if logs_data_locations is None:
+            raise ValueError("LOGS_DATA_LOCATION is not set")
+        logs_data_locations = logs_data_locations.split(",")
+
+        volumes_data_location = os.getenv("VOLUMES_DATA_LOCATION")
+        if volumes_data_location is None:
+            raise ValueError("VOLUMES_DATA_LOCATION is not set")
+        volumes_data_location = volumes_data_location.split(",")
+
+        for log_dir in logs_data_locations:
             builder.load_log_directory(log_dir)
-        for volume_dir in data_location["volumes"]:
+
+        for volume_dir in volumes_data_location:
             builder.load_volumes_directory(volume_dir)
         self.users = builder.build()
 

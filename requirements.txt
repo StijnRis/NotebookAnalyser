@@ -1,6 +1,4 @@
-pandas
 dotenv
-matplotlib
 requests
 XlsxWriter
-python-dotenv
+numpy
