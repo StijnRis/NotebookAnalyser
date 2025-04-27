@@ -19,6 +19,8 @@ class NumericColumn(Column[float]):
         worksheet: xlsxwriter.Workbook.worksheet_class,
         column_nr: int,
     ):
+        worksheet.set_column(column_nr, column_nr, 5)
+        
         for row, item in enumerate(self.items, start=1):
             worksheet.write(row, column_nr, item)
 

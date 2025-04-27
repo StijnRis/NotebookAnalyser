@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from xlsxwriter.utility import xl_col_to_name
 
@@ -32,25 +32,48 @@ class TimePeriodColumn(Column[list[tuple[datetime, datetime]]]):
         worksheet_y = workbook.add_worksheet(y_name)
         worksheet_y.hide()
 
+        # Calculate offset
+        first_datetime = datetime(2100, 1, 1)
+        last_datetime = datetime(1970, 1, 1)
+        for item_list in self.items:
+            for item in item_list:
+                first_datetime = min(first_datetime, item[0])
+                last_datetime = max(last_datetime, item[1])
+
+        duration = last_datetime - first_datetime
+        scale = 1
+        if duration > timedelta(days=1):
+            scale = 1 / timedelta(days=1).total_seconds()
+        elif duration > timedelta(hours=1):
+            scale = 1 / timedelta(hours=1).total_seconds()
+        elif duration > timedelta(minutes=1):
+            scale = 1 / timedelta(minutes=1).total_seconds()
+
         # Save data
         for row, item_list in enumerate(self.items):
-            offset = (
-                min([min(item) for item in item_list])
-                if (len(item_list) > 0)
-                else datetime.fromtimestamp(0)
-            )
+            # Make all start at same moment
+            worksheet_x.write(row + 1, 0, 0)
+            worksheet_y.write(row + 1, 0, 0)
+
             for column, item in enumerate(item_list):
-                start = (item[0] - offset).total_seconds()
-                end = (item[1] - offset).total_seconds()
-                worksheet_x.write(row + 1, 4 * column, start)
-                worksheet_y.write(row + 1, 4 * column, 0)
-                worksheet_x.write(row + 1, 4 * column + 1, start)
-                worksheet_y.write(row + 1, 4 * column + 1, 1)
-                worksheet_x.write(row + 1, 4 * column + 2, end)
+                first = (item[0] - first_datetime).total_seconds() * scale
+                last = (item[1] - first_datetime).total_seconds() * scale
+                worksheet_x.write(row + 1, 4 * column + 1, first)
+                worksheet_y.write(row + 1, 4 * column + 1, 0)
+                worksheet_x.write(row + 1, 4 * column + 2, first)
                 worksheet_y.write(row + 1, 4 * column + 2, 1)
-                worksheet_x.write(row + 1, 4 * column + 3, end)
-                worksheet_y.write(row + 1, 4 * column + 3, 0)
-            end_column = xl_col_to_name(len(item_list) * 4)
+                worksheet_x.write(row + 1, 4 * column + 3, last)
+                worksheet_y.write(row + 1, 4 * column + 3, 1)
+                worksheet_x.write(row + 1, 4 * column + 4, last)
+                worksheet_y.write(row + 1, 4 * column + 4, 0)
+
+            # Make all end at same moment
+            worksheet_x.write(
+                row + 1, len(item_list) * 4 + 1, (last_datetime - first_datetime).total_seconds() * scale
+            )
+            worksheet_y.write(row + 1, len(item_list) * 4 + 1, 0)
+
+            end_column = xl_col_to_name(len(item_list) * 4 + 1)
             worksheet.add_sparkline(
                 row + 1,
                 column_nr,

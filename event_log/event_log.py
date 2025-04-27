@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
+from functools import lru_cache
 from typing import Generic, TypeVar
 
 from .event import Event

@@ -1,4 +1,5 @@
 from datetime import datetime
+from functools import lru_cache
 
 from content_log.file_log import FileLog
 from content_log.progression.progression_with_datetime import ProgressionWithDatetime

@@ -12,7 +12,7 @@ def profile():
     stats = pstats.Stats("output/profile.prof")
     stats.strip_dirs()
     stats.sort_stats("cumtime")
-    stats.print_stats(100)
+    stats.print_stats(20)
 
 if __name__ == "__main__":
     profile()
