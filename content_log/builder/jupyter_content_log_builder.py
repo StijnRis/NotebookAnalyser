@@ -32,6 +32,11 @@ class JupyterWorkspaceLogBuilder:
         self.execution_events: dict[str, list[ExecutionResult]] = {}
         self.source_codes: dict[str, list[CodeFile]] = {}
         self.execution_error_result_analyser = execution_error_result_analyser
+    
+    def reset(self):
+        self.editing_events = {}
+        self.execution_events = {}
+        self.source_codes = {}
 
     def load_files(self, file_paths: list[str]):
         for file_path in file_paths:
@@ -252,6 +257,9 @@ class JupyterWorkspaceLogBuilder:
                 file, editing_log, code_version_manager, file_execution_log
             )
             file_logs.append(file_log)
-
+        
         workspace_log = WorkspaceLog(file_logs)
+
+        self.reset()
+        
         return workspace_log

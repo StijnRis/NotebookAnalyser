@@ -1,4 +1,5 @@
 import os
+import traceback
 
 from chat_log.analyser.chat_message_analyser import ChatMessageAnalyser
 from chat_log.builder.jupyter_chat_log_builder import JupyterChatLogBuilder
@@ -8,7 +9,6 @@ from content_log.execution_log.analyser.execution_error_result_analyser import (
 )
 from user.user import User
 from user.users import Users
-import traceback
 
 
 class JupyterUsersBuilder:
@@ -25,11 +25,11 @@ class JupyterUsersBuilder:
             self.execution_error_result_analyser
         )
         self.chat_log_builder = JupyterChatLogBuilder(self.chat_message_analyser)
-        self.user_filter = None
-    
-    def apply_user_filter(self, user_filter: str):
-        print(f"Applying user filter: {user_filter}")
-        self.user_filter = user_filter
+        self.users_filter = None
+
+    def apply_users_filter(self, users_filter: list[str]):
+        print(f"Applying user filter: {users_filter}")
+        self.users_filter = users_filter
 
     def get_user_data(self, username: str):
         if username not in self.users_data:
@@ -84,15 +84,13 @@ class JupyterUsersBuilder:
 
         # Load data into objects
         for username, user_data in self.users_data.items():
-            if self.user_filter and username != self.user_filter:
+            if self.users_filter and username not in self.users_filter:
                 print(f"Skipping user {username} due to filter")
                 continue
 
             print(f"Loading user {username}: ")
             print(f"  {len(user_data['chat_log_file_paths'])} chat log files")
-            print(
-                f"  {len(user_data['notebook_log_file_paths'])} notebook log files"
-            )
+            print(f"  {len(user_data['notebook_log_file_paths'])} notebook log files")
             print(f"  {len(user_data['notebook_file_paths'])} notebook files")
 
             try:

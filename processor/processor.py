@@ -86,9 +86,10 @@ class Processor:
             self.chat_message_analyser, self.execution_error_result_analyser
         )
 
-        username = os.getenv("FILTER_USERNAME")
-        if username:
-            builder.apply_user_filter(username)
+        usernames = os.getenv("FILTER_USERNAME")
+        if usernames:
+            usernames = usernames.split(",")
+            builder.apply_users_filter(usernames)
 
         logs_data_locations = os.getenv("LOGS_DATA_LOCATION")
         if logs_data_locations is None:
