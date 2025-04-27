@@ -42,7 +42,7 @@ class WorkspaceLog(EventLog):
 
     def get_event_sequence(self) -> list[tuple[datetime, str]]:
         """
-        Get all (time, event_type) pairs of the notebook and the chat
+        Get all (time, event_type) pairs of the files and the chats
         """
 
         sequence: list[tuple[datetime, str]] = []
@@ -68,9 +68,6 @@ class WorkspaceLog(EventLog):
                 if closest_time is None or event.get_time() > closest_time:
                     closest_time = event.get_time()
                     closest_file = file_log
-
-        if closest_file is None:
-            raise ValueError("Time before first event")
 
         return closest_file
 

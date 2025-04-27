@@ -24,7 +24,7 @@ class ExecutionResult(Event, ABC):
 
     def get_output_similarity_ratio(self, other: "ExecutionResult"):
         """
-        Compare output of two notebooks
+        Compare output of two files
         """
 
         output1 = self.get_content()

@@ -33,7 +33,7 @@ class SourceCode:
 
     def get_code_difference_ratio(self, other: "SourceCode") -> float:
         """
-        Compare output of two notebooks
+        Compare output of two files
         """
 
         output1 = self.get_code()

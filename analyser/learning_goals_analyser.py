@@ -11,7 +11,7 @@ from user.user import User
 
 class LearningGoalsAnalyser(Analyser):
     """
-    Generate report of user notebook
+    Generate report of user learning goals
     """
 
     def __init__(self, learning_goals: list[LearningGoal]):
@@ -23,12 +23,12 @@ class LearningGoalsAnalyser(Analyser):
 
     def analyse_user(self, user: User):
         username = user.get_username()
-        notebook_activity = user.get_workspace_log()
+        workspace_log = user.get_workspace_log()
 
         user_data: dict[str, Any] = {"Username": username}
 
         for learning_goal in self.learning_goals:
-            progression = notebook_activity.get_learning_goal_progression(learning_goal)
+            progression = workspace_log.get_learning_goal_progression(learning_goal)
             progression = (
                 progression.convert_to_progression_with_timedelta().remove_idle_time(
                     timedelta(minutes=5)

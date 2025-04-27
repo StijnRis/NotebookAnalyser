@@ -27,9 +27,9 @@ class RunTimeAnalyser(Analyser):
 
     def analyse_user(self, user: User):
         username = user.get_username()
-        notebook_activity = user.get_workspace_log()
+        workspace_log = user.get_workspace_log()
 
-        file_logs = notebook_activity.get_file_logs()
+        file_logs = workspace_log.get_file_logs()
 
         for file_log in file_logs:
             file_execution_log = file_log.get_file_execution_log()

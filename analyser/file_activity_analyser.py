@@ -5,7 +5,7 @@ from user.user import User
 
 class FileActivityAnalyser(Analyser):
     """
-    Generate report of user notebook
+    Generate report of users file activities
     """
 
     def __init__(self):

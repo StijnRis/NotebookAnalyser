@@ -11,12 +11,12 @@ class User:
         username: str,
         chat_log: ChatLog,
         workspace_log: WorkspaceLog,
-        notebook_files: list[str],
+        files: list[str],
     ):
         self.username = username
         self.chat_log = chat_log
         self.workspace_log = workspace_log
-        self.notebook_files = notebook_files
+        self.files = files
 
     def get_username(self):
         return self.username
@@ -27,8 +27,8 @@ class User:
     def get_workspace_log(self):
         return self.workspace_log
 
-    def get_notebook_files(self):
-        return self.notebook_files
+    def get_files(self):
+        return self.files
 
     def get_file_activities(self) -> list[FileActivity]:
         activities: list[FileActivity] = []
@@ -52,7 +52,7 @@ class User:
 
     def get_event_sequence(self):
         """
-        Get all (time, event_type) pairs of the notebook and the chat
+        Get all (time, event_type) pairs of the files and the chat
         """
 
         sequence: list[tuple[datetime, str]] = []

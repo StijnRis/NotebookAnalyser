@@ -90,7 +90,7 @@ class FileExecutionLog:
         times: list[datetime] = []
         output_progression: list[float] = []
 
-        # Check if user has saved any notebook content
+        # Check if user has executed any code
         if len(execution_outputs) == 0:
             return ProgressionWithDatetime(times, output_progression)
 

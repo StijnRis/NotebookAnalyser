@@ -78,7 +78,7 @@ class CodeVersionsLog:
         times: list[datetime] = []
         code_progression: list[float] = []
 
-        # Check if user has saved any notebook content
+        # Check if user has saved any workspaces
         if len(saved_workspaces) == 0:
             return ProgressionWithDatetime(times, code_progression)
 

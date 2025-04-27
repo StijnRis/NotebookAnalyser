@@ -307,5 +307,5 @@ class ReportGenerator:
                 break
             except Exception as e:
                 print(f"Error encountered: {e}.")
-                input("Close notebook so it can be saved.")
+                input("Close workbook so it can be saved.")
                 self.close()

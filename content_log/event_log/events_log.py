@@ -104,7 +104,7 @@ class EditingLog:
                     visible_periods.append((start_time, end_time))
                     start_time = None
 
-        # If the notebook is still visible at the end of the log
+        # If the file is still visible at the end of the log
         if start_time is not None:
             visible_periods.append((start_time, self.events[-1].get_time()))
 

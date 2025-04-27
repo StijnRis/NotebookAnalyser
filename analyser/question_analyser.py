@@ -31,15 +31,19 @@ class QuestionAnalyser(Analyser):
         purpose = message_question.get_question_purpose()
         question_type = message_question.get_question_type()
         time = message_question.time
-        active_notebook = user.get_workspace_log().get_active_file_at(time)
-        output_progression = (
-            active_notebook.get_file_execution_log().get_output_progression()
-        )
+        active_file = user.get_workspace_log().get_active_file_at(time)
 
-        current_output_progression = output_progression.get_progression_at(time)
-        output_progression_in_10_minutes = output_progression.get_progression_at(
-            time + timedelta(minutes=10)
-        )
+        current_output_progression = 0
+        output_progression_in_10_minutes = 0
+        if active_file is not None:
+            output_progression = (
+                active_file.get_file_execution_log().get_output_progression()
+            )
+
+            current_output_progression = output_progression.get_progression_at(time)
+            output_progression_in_10_minutes = output_progression.get_progression_at(
+                time + timedelta(minutes=10)
+            )
 
         self.sheet.add_row(
             {

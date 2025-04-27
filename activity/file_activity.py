@@ -33,7 +33,7 @@ class FileActivity:
 
         code = code_files[-1].get_code()
 
-        # Find all code snippets that are in the notebook state
+        # Find all code snippets that are in the file
         snippets = []
         for generated_code in generated_codes:
             if generated_code in code:
@@ -45,7 +45,7 @@ class FileActivity:
         generated_codes = self.chat_activity.get_answers().get_included_code_snippets()
         code = self.file_log.get_code_version_log().get_code_file_at(time).get_code()
 
-        # Find all code snippets that are in the notebook state
+        # Find all code snippets that are in the file
         similarities = []
         for generated_code in generated_codes:
             similarities.append(SequenceMatcher(None, generated_code, code).ratio())

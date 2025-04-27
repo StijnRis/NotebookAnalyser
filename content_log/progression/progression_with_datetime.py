@@ -13,7 +13,7 @@ class ProgressionWithDatetime:
 
     def get_progression_at(self, moment: datetime):
         """
-        Calculate the progression of a notebook at some time
+        Calculate the progression of a file at some time
         """
 
         if len(self.times) == 0:
@@ -26,15 +26,6 @@ class ProgressionWithDatetime:
             left=self.data[0],
             right=self.data[-1],
         )
-
-    # def get_progression_slope_at(self, moment: datetime):
-    #     """
-    #     Calculate the speed of progression a notebook at some time.
-    #     """
-
-    #     time = moment.timestamp()
-
-    #     return self.notebook_progression.get_gradient_at(time)
 
     def convert_to_progression_with_timedelta(self):
         return ProgressionWithTimedelta(

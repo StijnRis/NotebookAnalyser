@@ -75,12 +75,12 @@ class Processor:
 
         self.analysers: list[Analyser] = [
             UserAnalyser(),
-            # CodeFileAnalyser(),
+            CodeFileAnalyser(),
             EventSequenceAnalysis(),
-            # FileActivityAnalyser(),
+            FileActivityAnalyser(),
             QuestionAnalyser(),
             InteractionAnalyser(),
-            # ExecutionAnalyser(self.learning_goals),
+            ExecutionAnalyser(self.learning_goals),
             LearningGoalsAnalyser(self.learning_goals),
         ]
 
