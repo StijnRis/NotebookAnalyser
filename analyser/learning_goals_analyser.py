@@ -27,12 +27,12 @@ class LearningGoalsAnalyser(Analyser):
 
         user_data: dict[str, Any] = {"Username": username}
 
-        for learning_goal in self.learning_goals:
-            progression = workspace_log.get_learning_goal_progression(learning_goal)
+        active_periods = workspace_log.get_active_periods()
+        progressions = workspace_log.get_learning_goals_progression(self.learning_goals)
+        for i, learning_goal in enumerate(self.learning_goals):
             progression = (
-                progression.convert_to_progression_with_timedelta().remove_idle_time(
-                    timedelta(minutes=5)
-                )
+                progressions[i]
+                .select_periods(active_periods)
             ).convert_to_list_of_tuples()
 
             user_data[f"{learning_goal.name}"] = progression

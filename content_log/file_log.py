@@ -35,8 +35,7 @@ class FileLog(EventLog):
         self.editing_log.check_invariants()
         self.code_version_log.check_invariants()
         self.file_execution_log.check_invariants()
-    
-    # TODO add code version log to it
+
     def get_events(self):
         """
         Get all (time, event_type) pairs of the file log
@@ -45,6 +44,7 @@ class FileLog(EventLog):
 
         sequence.extend(self.editing_log.get_events())
         sequence.extend(self.file_execution_log.get_events())
+        sequence.extend(self.code_version_log.get_events())
 
         sequence.sort(key=lambda x: x.get_time())
 
@@ -100,7 +100,7 @@ class FileLog(EventLog):
 
         return event_sequence
 
-    #TODO remove
+    # TODO remove
     def get_code_fix_for_error(self, error: ExecutionErrorResult) -> str:
         """
         Get the changes made to the code after a runtime error.
@@ -128,14 +128,15 @@ class FileLog(EventLog):
         )
 
         return differences
-    
-    def get_learning_goal_progression(self, learning_goal: LearningGoal) -> ProgressionWithDatetime:
+
+    def get_learning_goals_progression(
+        self, learning_goals: list[LearningGoal]
+    ) -> list[ProgressionWithDatetime]:
         """
         Get the learning goal progression for a certain learning goal.
         """
-        datetimes = []
-        progression = []
-        score = 0
+        datetimes = [[] for _ in learning_goals]
+        progressions = [[] for _ in learning_goals]
 
         previous_successful_execution = None
         errors_before_succes: list[ExecutionErrorResult] = []
@@ -150,20 +151,37 @@ class FileLog(EventLog):
 
             time = execution.get_time()
 
-            applied_learning_goals = self.code_version_log.get_learning_goals_applied_between(
-                previous_successful_execution.get_time(), time, [learning_goal]
+            applied_learning_goals = (
+                self.code_version_log.get_learning_goals_applied_between(
+                    previous_successful_execution.get_time(), time, learning_goals
+                )
             )
 
-            datetimes.append(time)
-            if len(errors_before_succes) > 0:
-                score -= len(applied_learning_goals)
-            else:
-                score += len(applied_learning_goals)
-            progression.append(
-                score
-            )
+            
+            for index, learning_goal in enumerate(learning_goals):
+                amount_of_times_applied = applied_learning_goals.count(learning_goal)
+                if amount_of_times_applied > 0:
+                    if len(progressions[index]) == 0:
+                        datetimes[index].append(time - timedelta(seconds=1))
+                        progressions[index].append(0)
+
+                    previous_score = progressions[index][-1]
+
+                    # Make it hard cuts
+                    datetimes[index].append(time - timedelta(microseconds=1))
+                    progressions[index].append(previous_score)
+
+                    datetimes[index].append(time)
+                    if len(errors_before_succes) == 0:
+                        progressions[index].append(previous_score + amount_of_times_applied)
+                    else:
+                        progressions[index].append(previous_score - amount_of_times_applied)
 
             previous_successful_execution = execution
             errors_before_succes = []
-        
-        return ProgressionWithDatetime(datetimes, progression)
+
+        result = [
+            ProgressionWithDatetime(datetimes[index], progressions[index])
+            for index, goal in enumerate(learning_goals)
+        ]
+        return result

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from functools import lru_cache
-from typing import Generic, TypeVar
+from typing import Generic, Sequence, TypeVar
 
 from .event import Event
 
@@ -11,7 +11,7 @@ class EventLog(ABC):
     idle_threshold = timedelta(minutes=3)
 
     @abstractmethod
-    def get_events(self) -> list[Event]:
+    def get_events(self) -> Sequence[Event]:
         """
         Returns the list of events.
         """

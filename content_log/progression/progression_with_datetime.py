@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import numpy as np
 
@@ -7,6 +7,9 @@ from content_log.progression.progression_with_timedelta import ProgressionWithTi
 
 class ProgressionWithDatetime:
     def __init__(self, datetimes: list[datetime], progression: list[float]):
+        assert len(datetimes) == len(
+            progression
+        ), "Datetimes and progression must be the same length"
         self.times = [t.timestamp() for t in datetimes]
         self.datetimes = datetimes
         self.data = progression
@@ -32,6 +35,44 @@ class ProgressionWithDatetime:
             [self.datetimes[i] - self.datetimes[0] for i in range(len(self.datetimes))],
             self.data,
         )
+
+    def select_periods(
+        self, active_time: list[tuple[datetime, datetime]]
+    ) -> ProgressionWithTimedelta:
+        """
+        Select the active time of the progression. It returns a new ProgressionWithTimedelta object.
+        """
+
+        selected_times: list[timedelta] = []
+        selected_progression: list[float] = []
+        offset = timedelta(0)
+
+        active_time_index = 0
+        for i, time in enumerate(self.datetimes):
+            while (
+                active_time_index < len(active_time)
+                and time > active_time[active_time_index][1]
+            ):
+                offset += (
+                    active_time[active_time_index][1]
+                    - active_time[active_time_index][0]
+                )
+                active_time_index += 1
+
+            if (
+                active_time_index < len(active_time)
+                and active_time[active_time_index][0]
+                <= time
+                <= active_time[active_time_index][1]
+            ):
+                selected_times.append(time - active_time[active_time_index][0] + offset)
+                selected_progression.append(self.data[i])
+            else:
+                raise ValueError(
+                    f"Time {time} is not in the active time range {active_time[active_time_index]}"
+                )
+
+        return ProgressionWithTimedelta(selected_times, selected_progression)
 
     # TODO little bit weird, but it works
     def combine_through_addition(self, other: "ProgressionWithDatetime"):

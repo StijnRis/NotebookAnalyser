@@ -2,8 +2,10 @@ import ast
 from datetime import datetime
 from difflib import SequenceMatcher, ndiff, unified_diff
 
+from event_log.event import Event
 
-class SourceCode:
+
+class SourceCode(Event):
     def __init__(self, time: datetime, code: str):
         self.code = code
         self.time = time

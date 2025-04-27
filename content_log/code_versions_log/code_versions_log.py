@@ -1,12 +1,15 @@
 from datetime import datetime
 from functools import lru_cache
+from typing import Sequence
 
 from content_log.code_versions_log.code_file import CodeFile
 from content_log.progression.progression_with_datetime import ProgressionWithDatetime
+from event_log.event import Event
+from event_log.event_log import EventLog
 from processor.learning_goal.learning_goal import LearningGoal
 
 
-class CodeVersionsLog:
+class CodeVersionsLog(EventLog):
     def __init__(self, code_file: list[CodeFile]):
         self.code_files = code_file
 
@@ -21,8 +24,17 @@ class CodeVersionsLog:
         for i in range(len(self.code_files) - 1):
             assert self.code_files[i].get_path() == self.code_files[i + 1].get_path()
 
-        # for workspace in self.workspaces:
-        #     workspace.check_invariants()
+        # for file in self.code_files:
+        #     file.check_invariants()
+    
+    def get_events(self):
+        sequence: Sequence[CodeFile] = []
+
+        sequence.extend(self.code_files)
+
+        sequence.sort(key=lambda x: x.get_time())
+
+        return sequence
 
     def get_code_files(self) -> list[CodeFile]:
         return self.code_files
@@ -71,7 +83,7 @@ class CodeVersionsLog:
 
         return CodeVersionsLog(new_code_files)
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=1)
     def get_code_progression(self):
         saved_workspaces = self.get_code_files()
 

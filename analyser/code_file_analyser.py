@@ -55,14 +55,10 @@ class CodeFileAnalyser(Analyser):
             active_periods = file_log.get_active_periods()
 
             output_progression_working_time = (
-                output_progression.convert_to_progression_with_timedelta().remove_idle_time(
-                    timedelta(minutes=5)
-                )
+                output_progression.select_periods(active_periods)
             ).convert_to_list_of_tuples()
             code_progression_working_time = (
-                code_progression.convert_to_progression_with_timedelta().remove_idle_time(
-                    timedelta(minutes=5)
-                )
+                code_progression.select_periods(active_periods)
             ).convert_to_list_of_tuples()
             # ast_progression_working_time = (
             #     ast_progression.convert_to_progression_with_timedelta().remove_idle_time(

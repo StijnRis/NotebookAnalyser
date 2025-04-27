@@ -83,7 +83,7 @@ class FileExecutionLog:
 
         return results
     
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=1)
     def get_output_progression(self):
         execution_outputs = self.get_executions()
 
