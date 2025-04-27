@@ -68,8 +68,9 @@ class ProgressionWithDatetime:
                 selected_times.append(time - active_time[active_time_index][0] + offset)
                 selected_progression.append(self.data[i])
             else:
+                print(time.timestamp())
                 raise ValueError(
-                    f"Time {time} is not in the active time range {active_time[active_time_index]}"
+                    f"Time {time} is not in the active time range {active_time[active_time_index][0]} - {active_time[active_time_index][1]}"
                 )
 
         return ProgressionWithTimedelta(selected_times, selected_progression)

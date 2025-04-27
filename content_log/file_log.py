@@ -129,6 +129,7 @@ class FileLog(EventLog):
 
         return differences
 
+    # TODO merge with executing analyser (Now it is duplicated)
     def get_learning_goals_progression(
         self, learning_goals: list[LearningGoal]
     ) -> list[ProgressionWithDatetime]:
@@ -156,20 +157,15 @@ class FileLog(EventLog):
                     previous_successful_execution.get_time(), time, learning_goals
                 )
             )
-
             
             for index, learning_goal in enumerate(learning_goals):
                 amount_of_times_applied = applied_learning_goals.count(learning_goal)
                 if amount_of_times_applied > 0:
                     if len(progressions[index]) == 0:
-                        datetimes[index].append(time - timedelta(seconds=1))
+                        datetimes[index].append(time)
                         progressions[index].append(0)
 
                     previous_score = progressions[index][-1]
-
-                    # Make it hard cuts
-                    datetimes[index].append(time - timedelta(microseconds=1))
-                    progressions[index].append(previous_score)
 
                     datetimes[index].append(time)
                     if len(errors_before_succes) == 0:

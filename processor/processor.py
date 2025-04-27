@@ -44,6 +44,7 @@ from processor.learning_goal.variable_assignment_learning_goal import (
 from processor.learning_goal.while_loop_learning_goal import WhileLoopLearningGoal
 from report.report_generator import ReportGenerator
 from user.builder.jupyter_users_builder import JupyterUsersBuilder
+import traceback
 
 
 class Processor:
@@ -74,13 +75,13 @@ class Processor:
         )
 
         self.analysers: list[Analyser] = [
-            UserAnalyser(),
-            CodeFileAnalyser(),
-            EventSequenceAnalysis(),
-            FileActivityAnalyser(),
-            QuestionAnalyser(),
-            InteractionAnalyser(),
-            ExecutionAnalyser(self.learning_goals),
+            # UserAnalyser(),
+            # CodeFileAnalyser(),
+            # EventSequenceAnalysis(),
+            # FileActivityAnalyser(),
+            # QuestionAnalyser(),
+            # InteractionAnalyser(),
+            # ExecutionAnalyser(self.learning_goals),
             LearningGoalsAnalyser(self.learning_goals),
         ]
 
@@ -120,14 +121,23 @@ class Processor:
         report_generator = ReportGenerator(file_path)
 
         # Analyze users
+        debug = bool(os.getenv("DEBUG"))
+        if debug:
+            print("Debug mode enabled.")
+
         amount_of_users = len(self.users.get_users())
         for index, user in enumerate(self.users.get_users(), start=1):
             print(f"Processing user {user.username} ({index}/{amount_of_users})")
             for analyser in self.analysers:
-                # try:
-                analyser.analyse_user(user)
-                # except Exception as e:
-                #     print(f"Error processing user {user.username}: {e}")
+                if debug:
+                    analyser.analyse_user(user)
+                else:
+                    try:
+                        analyser.analyse_user(user)
+                    except Exception as e:
+                        print(f"Error processing user {user.username}")
+                        print(e)
+                        traceback.print_exc()
 
         print("Generating report")
         for analyser in self.analysers:
