@@ -7,7 +7,7 @@ from content_log.execution_log.execution_result import (
     ExecutionResult,
     ExecutionSuccessResult,
 )
-from content_log.progression.progression_with_datetime import ProgressionWithDatetime
+from event_log.series.time_series import TimeSeries
 
 
 class FileExecutionLog:
@@ -15,7 +15,9 @@ class FileExecutionLog:
         self.executions = executions
 
         self.executions.sort(key=lambda x: x.get_time())
-    
+
+        self.check_invariants()
+
     def check_invariants(self):
         # Check that the log entries are sorted by time
         for i in range(1, len(self.executions)):
@@ -25,7 +27,7 @@ class FileExecutionLog:
 
     def get_executions(self) -> list[ExecutionResult]:
         return self.executions
-    
+
     def get_events(self) -> list[ExecutionResult]:
         return self.executions
 
@@ -35,8 +37,10 @@ class FileExecutionLog:
             if isinstance(entry, ExecutionErrorResult):
                 runtime_errors.append(entry)
         return runtime_errors
-    
-    def get_first_successful_execution_after(self, time: datetime) -> ExecutionResult | None:
+
+    def get_first_successful_execution_after(
+        self, time: datetime
+    ) -> ExecutionResult | None:
         for entry in self.executions:
             if entry.get_time() > time and isinstance(entry, ExecutionSuccessResult):
                 return entry
@@ -82,17 +86,16 @@ class FileExecutionLog:
             results.append((entry.get_time(), entry.__class__.__name__))
 
         return results
-    
+
     @lru_cache(maxsize=1)
     def get_output_progression(self):
         execution_outputs = self.get_executions()
 
-        times: list[datetime] = []
-        output_progression: list[float] = []
+        data: list[tuple[datetime, float]] = []
 
         # Check if user has executed any code
         if len(execution_outputs) == 0:
-            return ProgressionWithDatetime(times, output_progression)
+            return TimeSeries(data)
 
         last_execution_output = execution_outputs[-1]
 
@@ -101,7 +104,6 @@ class FileExecutionLog:
                 last_execution_output
             )
 
-            times.append(execution_output.get_time())
-            output_progression.append(output_similarity)
+            data.append((execution_output.get_time(), output_similarity))
 
-        return ProgressionWithDatetime(times, output_progression)
+        return TimeSeries(data)

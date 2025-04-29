@@ -1,9 +1,7 @@
-from datetime import timedelta
-
 from analyser.analyser import Analyser
 from report.column.datetime_column import DatetimeColumn
 from report.column.numeric_column import NumericColumn
-from report.column.plots_column import PlotsColumn
+from report.column.line_plots_column import LinePlotsColumn
 from report.column.text_column import TextColumn
 from report.column.time_period_column import TimePeriodColumn
 from report.column.timedelta_column import TimedeltaColumn
@@ -32,10 +30,10 @@ class CodeFileAnalyser(Analyser):
                 TimedeltaColumn("Open time"),
                 TimedeltaColumn("Usage time"),
                 NumericColumn("Amount of saves"),
-                PlotsColumn("Code progression"),
+                LinePlotsColumn("Code progression"),
                 NumericColumn("Executions"),
                 NumericColumn("Runtime errors"),
-                PlotsColumn("Output progression"),
+                LinePlotsColumn("Output progression"),
             ]
         )
 
@@ -55,10 +53,10 @@ class CodeFileAnalyser(Analyser):
             active_periods = file_log.get_active_periods()
 
             output_progression_working_time = (
-                output_progression.select_periods(active_periods)
+                output_progression.select_periods(active_periods, 0, 1)
             ).convert_to_list_of_tuples()
             code_progression_working_time = (
-                code_progression.select_periods(active_periods)
+                code_progression.select_periods(active_periods, 0, 1)
             ).convert_to_list_of_tuples()
             # ast_progression_working_time = (
             #     ast_progression.convert_to_progression_with_timedelta().remove_idle_time(

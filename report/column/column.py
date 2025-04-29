@@ -29,5 +29,5 @@ def shorten_string(string: str, length: int):
     string_length = len(string)
     while pos < len(string):
         new_string += string[pos]
-        pos += max(1, (string_length - pos) // (length - len(new_string)))
+        pos += max(1, round((string_length - pos) / (length - len(new_string))))
     return new_string

@@ -8,7 +8,7 @@ from .event import Event
 
 
 class EventLog(ABC):
-    idle_threshold = timedelta(minutes=3)
+    idle_threshold = timedelta(minutes=10)
 
     @abstractmethod
     def get_events(self) -> Sequence[Event]:

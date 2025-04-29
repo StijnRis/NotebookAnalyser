@@ -5,9 +5,9 @@ from content_log.code_versions_log.code_versions_log import CodeVersionsLog
 from content_log.event_log.events_log import EditingLog
 from content_log.execution_log.execution_result import ExecutionErrorResult
 from content_log.execution_log.file_execution_log import FileExecutionLog
-from content_log.progression.progression_with_datetime import ProgressionWithDatetime
 from event_log.event import Event
 from event_log.event_log import EventLog
+from event_log.series.time_series import TimeSeries
 from processor.learning_goal.learning_goal import LearningGoal
 
 
@@ -132,12 +132,11 @@ class FileLog(EventLog):
     # TODO merge with executing analyser (Now it is duplicated)
     def get_learning_goals_progression(
         self, learning_goals: list[LearningGoal]
-    ) -> list[ProgressionWithDatetime]:
+    ) -> list[TimeSeries]:
         """
         Get the learning goal progression for a certain learning goal.
         """
-        datetimes = [[] for _ in learning_goals]
-        progressions = [[] for _ in learning_goals]
+        datas = [[] for _ in learning_goals]
 
         previous_successful_execution = None
         errors_before_succes: list[ExecutionErrorResult] = []
@@ -157,27 +156,16 @@ class FileLog(EventLog):
                     previous_successful_execution.get_time(), time, learning_goals
                 )
             )
-            
+
             for index, learning_goal in enumerate(learning_goals):
                 amount_of_times_applied = applied_learning_goals.count(learning_goal)
                 if amount_of_times_applied > 0:
-                    if len(progressions[index]) == 0:
-                        datetimes[index].append(time)
-                        progressions[index].append(0)
-
-                    previous_score = progressions[index][-1]
-
-                    datetimes[index].append(time)
-                    if len(errors_before_succes) == 0:
-                        progressions[index].append(previous_score + amount_of_times_applied)
-                    else:
-                        progressions[index].append(previous_score - amount_of_times_applied)
+                    datas[index].append((time, 1 if len(errors_before_succes) == 0 else -1))
 
             previous_successful_execution = execution
             errors_before_succes = []
 
-        result = [
-            ProgressionWithDatetime(datetimes[index], progressions[index])
-            for index, goal in enumerate(learning_goals)
-        ]
+        result = []
+        for index, goal in enumerate(learning_goals):
+            result.append(TimeSeries(datas[index]))
         return result

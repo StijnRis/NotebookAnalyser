@@ -1,10 +1,12 @@
 from datetime import datetime
 
 from content_log.file_log import FileLog
-from content_log.progression.progression_with_datetime import ProgressionWithDatetime
 from event_log.event import Event
 from event_log.event_log import EventLog
+from event_log.series.time_series import TimeSeries
 from processor.learning_goal.learning_goal import LearningGoal
+
+# from event_log.series.progression_with_datetime import ProgressionWithDatetime
 
 
 class WorkspaceLog(EventLog):
@@ -71,19 +73,21 @@ class WorkspaceLog(EventLog):
 
         return closest_file
 
-    def get_learning_goals_progression(self, learning_goals: list[LearningGoal]):
+    def get_learning_goals_progression(
+        self, learning_goals: list[LearningGoal]
+    ) -> list[TimeSeries]:
         """
         Get the learning goal progression of the file logs for multiple learning goals.
         """
 
-        progressions = [ProgressionWithDatetime([], []) for _ in learning_goals]
+        progressions = [TimeSeries([]) for _ in learning_goals]
         for file_log in self.file_logs:
             progressions_file_log = file_log.get_learning_goals_progression(
                 learning_goals
             )
             for index in range(len(learning_goals)):
-                progressions[index] = progressions[index].combine_through_addition(
-                    progressions_file_log[index]
-                )
+                progressions[index] = progressions[
+                    index
+                ].combine_through_concattenation(progressions_file_log[index])
 
         return progressions

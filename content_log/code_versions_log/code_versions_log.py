@@ -3,9 +3,8 @@ from functools import lru_cache
 from typing import Sequence
 
 from content_log.code_versions_log.code_file import CodeFile
-from content_log.progression.progression_with_datetime import ProgressionWithDatetime
-from event_log.event import Event
 from event_log.event_log import EventLog
+from event_log.series.time_series import TimeSeries
 from processor.learning_goal.learning_goal import LearningGoal
 
 
@@ -26,7 +25,7 @@ class CodeVersionsLog(EventLog):
 
         # for file in self.code_files:
         #     file.check_invariants()
-    
+
     def get_events(self):
         sequence: Sequence[CodeFile] = []
 
@@ -87,22 +86,20 @@ class CodeVersionsLog(EventLog):
     def get_code_progression(self):
         saved_workspaces = self.get_code_files()
 
-        times: list[datetime] = []
-        code_progression: list[float] = []
+        data: list[tuple[datetime, float]] = []
 
         # Check if user has saved any workspaces
         if len(saved_workspaces) == 0:
-            return ProgressionWithDatetime(times, code_progression)
+            return TimeSeries(data)
 
         last_workspace = saved_workspaces[-1]
 
         for workspace in saved_workspaces:
             code_difference = workspace.get_code_difference_ratio(last_workspace)
 
-            times.append(workspace.get_time())
-            code_progression.append(code_difference)
+            data.append((workspace.get_time(), code_difference))
 
-        return ProgressionWithDatetime(times, code_progression)
+        return TimeSeries(data)
 
     def get_learning_goals_applied_between(
         self, start: datetime, end: datetime, learning_goals: list[LearningGoal]

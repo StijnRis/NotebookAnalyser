@@ -19,10 +19,13 @@ class NumericColumn(Column[float]):
         worksheet: xlsxwriter.Workbook.worksheet_class,
         column_nr: int,
     ):
-        worksheet.set_column(column_nr, column_nr, 5)
         
+        max_number = 0
         for row, item in enumerate(self.items, start=1):
             worksheet.write(row, column_nr, item)
+            max_number = max(max_number, item)
+        
+        worksheet.set_column(column_nr, column_nr, len(str(max_number)) + 0.5)
 
         worksheet.conditional_format(
             1,

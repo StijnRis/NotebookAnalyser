@@ -56,18 +56,18 @@ class Processor:
 
         self.learning_goals = [
             VariableAssignmentLearningGoal(),
+            TypeCastingLearningGoal(),
             IfStatementLearningGoal(),
             ForLoopLearningGoal(),
             WhileLoopLearningGoal(),
+            BreakStatementLearningGoal(),
             FunctionDefinitionLearningGoal(),
+            PrintStatementLearningGoal(),
             FunctionCallLearningGoal(),
             ListDeclarationLearningGoal(),
             ListAccessLearningGoal(),
             ListAssignmentLearningGoal(),
             ImportStatementLearningGoal(),
-            TypeCastingLearningGoal(),
-            PrintStatementLearningGoal(),
-            BreakStatementLearningGoal(),
         ]
 
         self.execution_error_result_analyser = ChatbotExecutionErrorResultAnalyser(

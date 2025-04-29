@@ -1,10 +1,10 @@
-from datetime import timedelta
 from typing import Any
 
 from analyser.analyser import Analyser
 from processor.learning_goal.learning_goal import LearningGoal
 from report.column.column import Column
-from report.column.plots_column import PlotsColumn
+from report.column.column_plots_column import ColumnPlotsColumn
+from report.column.line_plots_column import LinePlotsColumn
 from report.column.text_column import TextColumn
 from user.user import User
 
@@ -18,7 +18,7 @@ class LearningGoalsAnalyser(Analyser):
         super().__init__()
         self.learning_goals = learning_goals
         columns: list[Column] = [TextColumn("Username")]
-        columns.extend([PlotsColumn(goal.name) for goal in learning_goals])
+        columns.extend([ColumnPlotsColumn(goal.name) for goal in learning_goals])
         self.sheet.add_columns(columns)
 
     def analyse_user(self, user: User):
@@ -31,8 +31,7 @@ class LearningGoalsAnalyser(Analyser):
         progressions = workspace_log.get_learning_goals_progression(self.learning_goals)
         for i, learning_goal in enumerate(self.learning_goals):
             progression = (
-                progressions[i]
-                .select_periods(active_periods)
+                progressions[i].select_periods(active_periods, 0, 0)
             ).convert_to_list_of_tuples()
 
             user_data[f"{learning_goal.name}"] = progression

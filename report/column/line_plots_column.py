@@ -7,7 +7,7 @@ from report.column.column import Column
 from report.report_generator import shorten_string
 
 
-class PlotsColumn(Column[List[Tuple[float, float]]]):
+class LinePlotsColumn(Column[List[Tuple[float, float]]]):
     def __init__(self, name: str):
         super().__init__(name)
         self.items: List[List[Tuple[float, float]]] = []
@@ -16,7 +16,7 @@ class PlotsColumn(Column[List[Tuple[float, float]]]):
         if not isinstance(item, list) or not all(
             isinstance(t, tuple)
             and len(t) == 2
-            and all(isinstance(x, float) for x in t)
+            and all(isinstance(x, (float, int)) for x in t)
             for t in item
         ):
             raise TypeError("Item must be a list of 2-tuples with floats")
