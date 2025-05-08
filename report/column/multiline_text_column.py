@@ -19,7 +19,7 @@ class MultilineTextColumn(Column[str]):
         worksheet: xlsxwriter.Workbook.worksheet_class,
         column_nr: int,
     ):
-        cell_format = workbook.add_format({'text_wrap': True})
+        cell_format = workbook.add_format({'text_wrap': True, 'valign': 'top'})
         worksheet.set_column(column_nr, column_nr, 48, cell_format)  # Convert pixels to Excel column width
         for row, item in enumerate(self.items, start=1):
             worksheet.write(row, column_nr, item)

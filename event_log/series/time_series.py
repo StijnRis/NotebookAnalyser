@@ -68,6 +68,9 @@ class TimeSeries:
         Select the active time of the progression. It returns a new ProgressionWithTimedelta object.
         """
 
+        if len(self.data) == 0:
+            return TimedeltaSeries([])
+
         selected_data: list[tuple[timedelta, float]] = [(timedelta(0), start_value)]
 
         offset = timedelta(0)

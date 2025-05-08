@@ -15,9 +15,8 @@ from content_log.execution_log.analyser.execution_error_result_analyser import (
     ExecutionErrorResultAnalyser,
 )
 from content_log.execution_log.execution_result import (
-    ExecutionEmptyResult,
+    ExecutionCompositeResult,
     ExecutionErrorResult,
-    ExecutionResult,
     ExecutionStreamResult,
     ExecutionTextResult,
 )
@@ -29,10 +28,10 @@ from content_log.workspace_log import WorkspaceLog
 class JupyterWorkspaceLogBuilder:
     def __init__(self, execution_error_result_analyser: ExecutionErrorResultAnalyser):
         self.editing_events: dict[str, list[ContentEvent]] = {}
-        self.execution_events: dict[str, list[ExecutionResult]] = {}
+        self.execution_events: dict[str, list[ExecutionCompositeResult]] = {}
         self.source_codes: dict[str, list[CodeFile]] = {}
         self.execution_error_result_analyser = execution_error_result_analyser
-    
+
     def reset(self):
         self.editing_events = {}
         self.execution_events = {}
@@ -166,9 +165,11 @@ class JupyterWorkspaceLogBuilder:
 
         file_info = self.get_execution_info_for_file(file_name)
 
-        file_info.extend(events)
+        file_info.append(events)
 
-    def parse_file_execution_events(self, data: dict) -> list[ExecutionResult] | None:
+    def parse_file_execution_events(
+        self, data: dict
+    ) -> ExecutionCompositeResult | None:
         event_type = data["eventDetail"]["eventName"]
         event_time = datetime.fromtimestamp(data["eventDetail"]["eventTime"] / 1000)
 
@@ -188,15 +189,12 @@ class JupyterWorkspaceLogBuilder:
 
         outputs = executed_cell["outputs"]
 
-        if len(outputs) == 0:
-            return [ExecutionEmptyResult(event_time)]
-
-        events = []
+        results = []
         for output_data in outputs:
             if output_data["output_type"] == "stream":
-                events.append(ExecutionStreamResult(event_time, output_data["text"]))
+                results.append(ExecutionStreamResult(event_time, output_data["text"]))
             elif output_data["output_type"] == "error":
-                events.append(
+                results.append(
                     ExecutionErrorResult(
                         event_time,
                         "\n".join(output_data["traceback"]),
@@ -206,11 +204,11 @@ class JupyterWorkspaceLogBuilder:
                     )
                 )
             elif output_data["output_type"] == "execute_result":
-                events.append(ExecutionTextResult(event_time, output_data["data"]))
+                results.append(ExecutionTextResult(event_time, output_data["data"]))
             else:
                 raise ValueError(f"Unknown output type: {output_data['output_type']}")
 
-        return events
+        return ExecutionCompositeResult(event_time, results)
 
     def load_code_files(self, data: dict):
         if (
@@ -229,7 +227,7 @@ class JupyterWorkspaceLogBuilder:
             file_info.append(code_file)
 
     def parse_code_files(self, data: dict, file: str) -> list[CodeFile]:
-        event_time = datetime.fromtimestamp(data["eventDetail"]["eventTime"] / 1000)
+        event_time = datetime.fromtimestamp(data["eventDetail"]["eventTime"] / 1000.0)
 
         cells = data["notebookState"]["notebookContent"]["cells"]
 
@@ -257,9 +255,9 @@ class JupyterWorkspaceLogBuilder:
                 file, editing_log, code_version_manager, file_execution_log
             )
             file_logs.append(file_log)
-        
+
         workspace_log = WorkspaceLog(file_logs)
 
         self.reset()
-        
+
         return workspace_log

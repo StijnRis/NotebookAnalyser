@@ -1,8 +1,8 @@
+import re
 from abc import ABC, abstractmethod
 from datetime import datetime
 from difflib import SequenceMatcher
 from functools import lru_cache
-import re
 
 from content_log.execution_log.analyser.execution_error_result_analyser import (
     ExecutionErrorResultAnalyser,
@@ -32,15 +32,9 @@ class ExecutionResult(Event, ABC):
 
         return SequenceMatcher(None, output1, output2).ratio()
 
+
 class ExecutionSuccessResult(ExecutionResult, ABC):
     pass
-
-class ExecutionEmptyResult(ExecutionSuccessResult):
-    def __init__(self, time: datetime):
-        super().__init__(time)
-
-    def get_content(self) -> str:
-        return "<EmptyResult>"
 
 
 class ExecutionStreamResult(ExecutionSuccessResult):
@@ -54,6 +48,7 @@ class ExecutionStreamResult(ExecutionSuccessResult):
 
     def get_content(self) -> str:
         return self.content
+
 
 class ExecutionTextResult(ExecutionSuccessResult):
     def __init__(self, time: datetime, result: dict):
@@ -71,6 +66,7 @@ class ExecutionImageResult(ExecutionSuccessResult):
 
     def get_content(self) -> str:
         return "DisplayDataResult"
+
 
 class ExecutionErrorResult(ExecutionResult):
     def __init__(
@@ -92,7 +88,8 @@ class ExecutionErrorResult(ExecutionResult):
 
     def get_cleaned_traceback(self) -> str:
         traceback = self.traceback
-        traceback = re.sub(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])', '', traceback)
+        traceback = re.sub(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]', "", traceback)
+        # traceback = re.sub(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])", "", traceback)
         return traceback
 
     def get_error_name(self) -> str:
@@ -102,8 +99,56 @@ class ExecutionErrorResult(ExecutionResult):
         return self.error_value
 
     def get_content(self) -> str:
-        return f"{self.error_name}: {self.error_value}"
+        return f"{self.error_name}: {self.error_value}\n{self.get_cleaned_traceback()}"
+
+    def get_line_numbers(self) -> list[int]:
+        """
+        Get the line numbers of the error in the traceback
+        """
+        traceback = self.get_cleaned_traceback()
+        lines = traceback.splitlines()
+        line_numbers = []
+        for line in lines:
+            match = re.search(r"line (\d+)", line)
+            if match:
+                line_numbers.append(int(match.group(1)))
+        return line_numbers
 
     @lru_cache(maxsize=None)
     def get_error_type(self) -> LearningGoal:
         return self.analyser.get_error_type(self)
+
+    def has_error_occurred(self) -> bool:
+        if self.error_name == "KeyboardInterrupt":
+            return False
+        return True
+
+
+class ExecutionCompositeResult(Event):
+    def __init__(self, time: datetime, results: list[ExecutionResult]):
+        self.time = time
+        self.results = results
+
+    def get_time(self) -> datetime:
+        return self.time
+
+    def get_content(self) -> str:
+        if len(self.results) == 0:
+            return "<EmptyResult>"
+        return "\n".join([result.get_content() for result in self.results])
+
+    def get_error(self) -> ExecutionErrorResult | None:
+        for result in self.results:
+            if isinstance(result, ExecutionErrorResult):
+                return result
+        return None
+
+    def get_output_similarity_ratio(self, other: "ExecutionCompositeResult"):
+        """
+        Compare output of two files
+        """
+
+        output1 = self.get_content()
+        output2 = other.get_content()
+
+        return SequenceMatcher(None, output1, output2).ratio()

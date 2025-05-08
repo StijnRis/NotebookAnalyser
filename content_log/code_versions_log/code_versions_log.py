@@ -1,3 +1,4 @@
+import code
 from datetime import datetime
 from functools import lru_cache
 from typing import Sequence
@@ -64,6 +65,9 @@ class CodeVersionsLog(EventLog):
 
         if closest_code_file is None:
             return CodeFile(time, "", "")
+        
+        # if closest_code_file.get_time() != time:
+        #     print(f"Code file not found at time {time}, using file at time {closest_code_file.get_time()}")
 
         return closest_code_file
 
@@ -71,6 +75,7 @@ class CodeVersionsLog(EventLog):
         """
         Remove duplicate code files.
         """
+        
 
         new_code_files: list[CodeFile] = []
         for code_file in self.code_files:
@@ -111,12 +116,7 @@ class CodeVersionsLog(EventLog):
         code_version = self.get_code_file_at(end)
 
         lines_changed = code_version.get_line_numbers_of_new_code(previous_code_version)
-        new_ast_items = code_version.get_ast_of_lines(lines_changed)
 
-        learning_goals_in_ast = []
-        for ast_item in new_ast_items:
-            for goal in learning_goals:
-                if goal.is_applied_in(ast_item):
-                    learning_goals_in_ast.append(goal)
-
-        return learning_goals_in_ast
+        return code_version.get_learning_goals_applied_on_lines(
+            lines_changed, learning_goals
+        )

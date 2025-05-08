@@ -141,8 +141,9 @@ class FileLog(EventLog):
         previous_successful_execution = None
         errors_before_succes: list[ExecutionErrorResult] = []
         for execution in self.file_execution_log.get_executions():
-            if isinstance(execution, ExecutionErrorResult):
-                errors_before_succes.append(execution)
+            error = execution.get_error()
+            if error is not None:
+                errors_before_succes.append(error)
                 continue
 
             if previous_successful_execution is None:
@@ -157,10 +158,17 @@ class FileLog(EventLog):
                 )
             )
 
+            
+
             for index, learning_goal in enumerate(learning_goals):
                 amount_of_times_applied = applied_learning_goals.count(learning_goal)
                 if amount_of_times_applied > 0:
-                    datas[index].append((time, 1 if len(errors_before_succes) == 0 else -1))
+                    # if len(datas[index]) == 0:
+                    #     score = 0
+                    # else:
+                    #     score = datas[index][-1][1]
+                    score = 1 if len(errors_before_succes) == 0 else -1
+                    datas[index].append((time, score))
 
             previous_successful_execution = execution
             errors_before_succes = []

@@ -3,6 +3,7 @@ from functools import lru_cache
 from typing import List, Tuple
 
 from content_log.execution_log.execution_result import (
+    ExecutionCompositeResult,
     ExecutionErrorResult,
     ExecutionResult,
     ExecutionSuccessResult,
@@ -11,7 +12,7 @@ from event_log.series.time_series import TimeSeries
 
 
 class FileExecutionLog:
-    def __init__(self, executions: list[ExecutionResult]):
+    def __init__(self, executions: list[ExecutionCompositeResult]):
         self.executions = executions
 
         self.executions.sort(key=lambda x: x.get_time())
@@ -25,17 +26,18 @@ class FileExecutionLog:
                 self.executions[i].get_time() >= self.executions[i - 1].get_time()
             ), "Log entries should be sorted by event time"
 
-    def get_executions(self) -> list[ExecutionResult]:
+    def get_executions(self) -> list[ExecutionCompositeResult]:
         return self.executions
 
-    def get_events(self) -> list[ExecutionResult]:
+    def get_events(self) -> list[ExecutionCompositeResult]:
         return self.executions
 
     def get_runtime_errors(self) -> list[ExecutionErrorResult]:
         runtime_errors = []
         for entry in self.executions:
-            if isinstance(entry, ExecutionErrorResult):
-                runtime_errors.append(entry)
+            error = entry.get_error()
+            if error is not None:
+                runtime_errors.append(error)
         return runtime_errors
 
     def get_first_successful_execution_after(
@@ -62,7 +64,8 @@ class FileExecutionLog:
     def get_amount_of_runtime_errors(self):
         total = 0
         for entry in self.executions:
-            if isinstance(entry, ExecutionErrorResult):
+            error = entry.get_error()
+            if error is not None:
                 total += 1
 
         return total
@@ -72,9 +75,9 @@ class FileExecutionLog:
         Returns a list of tuples with the event time and execution result (success or failure).
         """
         results = []
-        for entry in self.executions:
-            success = not isinstance(entry, ExecutionErrorResult)
-            results.append((entry.get_time(), success))
+        for execution in self.executions:
+            success = execution.get_error() is None
+            results.append((execution.get_time(), success))
         return results
 
     def get_event_sequence(self) -> List[Tuple[datetime, str]]:

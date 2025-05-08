@@ -1,8 +1,10 @@
 import os
+import traceback
 from datetime import datetime
 
 from analyser.analyser import Analyser
 from analyser.code_file_analyser import CodeFileAnalyser
+from analyser.editing_analyser import EditingAnalyser
 from analyser.event_sequence_analysis import EventSequenceAnalysis
 from analyser.execution_analyser import ExecutionAnalyser
 from analyser.file_activity_analyser import FileActivityAnalyser
@@ -44,7 +46,6 @@ from processor.learning_goal.variable_assignment_learning_goal import (
 from processor.learning_goal.while_loop_learning_goal import WhileLoopLearningGoal
 from report.report_generator import ReportGenerator
 from user.builder.jupyter_users_builder import JupyterUsersBuilder
-import traceback
 
 
 class Processor:
@@ -81,6 +82,7 @@ class Processor:
             FileActivityAnalyser(),
             QuestionAnalyser(),
             InteractionAnalyser(),
+            EditingAnalyser(self.learning_goals),
             ExecutionAnalyser(self.learning_goals),
             LearningGoalsAnalyser(self.learning_goals),
         ]

@@ -1,8 +1,9 @@
 from analyser.analyser import Analyser
-from content_log.execution_log.execution_result import ExecutionErrorResult
 from processor.learning_goal.learning_goal import LearningGoal
+from report.column.boolean_column import BooleanColumn
 from report.column.datetime_column import DatetimeColumn
 from report.column.multiline_text_column import MultilineTextColumn
+from report.column.numeric_column import NumericColumn
 from report.column.text_column import TextColumn
 from user.user import User
 
@@ -19,74 +20,54 @@ class ExecutionAnalyser(Analyser):
             [
                 TextColumn("Username"),
                 TextColumn("File"),
-                DatetimeColumn("Start time"),
-                DatetimeColumn("End time"),
-                MultilineTextColumn("Final code version"),
-                TextColumn("Errors during making"),
-                MultilineTextColumn("Changes made"),
-                MultilineTextColumn("Applied learning goals"),
+                NumericColumn("Timestamp"),
+                DatetimeColumn("Time"),
+                BooleanColumn("Success"),
+                MultilineTextColumn("Modifications"),
+                MultilineTextColumn("Code"),
+                MultilineTextColumn("Result"),
+                TextColumn("Error on lines"),
             ]
         )
 
     def analyse_user(self, user: User):
         username = user.get_username()
-        workspace_log = user.get_workspace_log()
 
-        file_logs = workspace_log.get_file_logs()
-
+        file_logs = user.get_workspace_log().get_file_logs()
         for file_log in file_logs:
             executions = file_log.get_file_execution_log().get_executions()
             file_path = file_log.get_path()
             code_versions_log = file_log.get_code_version_log()
 
-            previous_successful_execution = None
-            errors_before_succes: list[ExecutionErrorResult] = []
+            previous_code_version = None
             for execution in executions:
-                if isinstance(execution, ExecutionErrorResult):
-                    errors_before_succes.append(execution)
-                    continue
+                time = execution.get_time()
+                timestamp = time.timestamp()
+                end_code_version = code_versions_log.get_code_file_at(time)
 
-                if previous_successful_execution is None:
-                    previous_successful_execution = execution
-                    continue
-
-                end_time = execution.get_time()
-                end_code_version = code_versions_log.get_code_file_at(end_time)
-
-                previous_code_version = code_versions_log.get_code_file_at(
-                    previous_successful_execution.get_time()
-                )
-
-                differences = end_code_version.get_code_difference(previous_code_version)
-
-                start_time = previous_successful_execution.get_time()
-                applied_learning_goals = (
-                    code_versions_log.get_learning_goals_applied_between(
-                        start_time,
-                        end_time,
-                        self.learning_goals,
+                modifications = ""
+                if previous_code_version is not None:
+                    modifications = end_code_version.get_code_difference(
+                        previous_code_version
                     )
-                )
+
+                line_numbers = []
+                error = execution.get_error()
+                if error is not None:
+                    line_numbers = error.get_line_numbers()
 
                 self.sheet.add_row(
                     {
                         "Username": username,
                         "File": file_path,
-                        "Start time": start_time,
-                        "End time": end_time,
-                        "Final code version": end_code_version.get_code(),
-                        "Errors during making": "\n".join(
-                            [error.get_error_name() for error in errors_before_succes]
-                        ),
-                        "Changes made": differences,
-                        "Applied learning goals": ", ".join(
-                            [
-                                learning_goal.name
-                                for learning_goal in applied_learning_goals
-                            ]
-                        ),
+                        "Timestamp": timestamp,
+                        "Time": time,
+                        "Success": error is None,
+                        "Modifications": modifications,
+                        "Code": end_code_version.get_code(),
+                        "Result": execution.get_content(),
+                        "Error on lines": f"{line_numbers}",
                     }
                 )
 
-                previous_successful_execution = execution
-                errors_before_succes = []
+                previous_code_version = end_code_version

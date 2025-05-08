@@ -12,4 +12,3 @@ class CodeFile(SourceCode):
     def get_path(self) -> str:
         return self.path
     
- 

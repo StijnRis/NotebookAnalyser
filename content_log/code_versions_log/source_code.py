@@ -3,6 +3,7 @@ from datetime import datetime
 from difflib import SequenceMatcher, ndiff, unified_diff
 
 from event_log.event import Event
+from processor.learning_goal.learning_goal import LearningGoal
 
 
 class SourceCode(Event):
@@ -90,3 +91,18 @@ class SourceCode(Event):
         return self.get_ast_of_lines(lines)
     
     
+    def get_learning_goals_applied_on_lines(
+        self, lines: list[int], learning_goals: list[LearningGoal]
+    ) -> list[LearningGoal]:
+        """
+        Get the learning goals applied between two datetime points.
+        """
+        ast_items = self.get_ast_of_lines(lines)
+
+        learning_goals_in_ast = []
+        for ast_item in ast_items:
+            for goal in learning_goals:
+                if goal.is_applied_in(ast_item):
+                    learning_goals_in_ast.append(goal)
+
+        return learning_goals_in_ast
