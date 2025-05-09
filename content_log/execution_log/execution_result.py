@@ -4,6 +4,7 @@ from datetime import datetime
 from difflib import SequenceMatcher
 from functools import lru_cache
 
+from content_log.code_versions_log.code_file import CodeFile
 from content_log.execution_log.analyser.execution_error_result_analyser import (
     ExecutionErrorResultAnalyser,
     LearningGoal,
@@ -88,7 +89,7 @@ class ExecutionErrorResult(ExecutionResult):
 
     def get_cleaned_traceback(self) -> str:
         traceback = self.traceback
-        traceback = re.sub(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]', "", traceback)
+        traceback = re.sub(r"(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]", "", traceback)
         # traceback = re.sub(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])", "", traceback)
         return traceback
 
@@ -115,8 +116,9 @@ class ExecutionErrorResult(ExecutionResult):
         return line_numbers
 
     @lru_cache(maxsize=None)
-    def get_error_type(self) -> LearningGoal:
-        return self.analyser.get_error_type(self)
+    def get_error_type(self, code_file: CodeFile) -> LearningGoal:
+        # assert code_file.get_time() == self.get_time(), "Code file time does not match error time"
+        return self.analyser.get_error_type(self, code_file)
 
     def has_error_occurred(self) -> bool:
         if self.error_name == "KeyboardInterrupt":

@@ -16,3 +16,11 @@ class PrintStatementLearningGoal(LearningGoal):
             and isinstance(code.func, ast.Name)
             and code.func.id == "print"
         )
+
+    def found_in_error(self, error_name: str, traceback: str, code: str) -> bool:
+        """
+        Detects print statement errors using error name and traceback.
+        """
+        if "syntaxerror" in error_name.lower() and "print" in traceback.lower():
+            return True
+        return False

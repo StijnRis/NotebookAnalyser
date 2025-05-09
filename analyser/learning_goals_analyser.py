@@ -18,7 +18,10 @@ class LearningGoalsAnalyser(Analyser):
         super().__init__()
         self.learning_goals = learning_goals
         columns: list[Column] = [TextColumn("Username")]
-        columns.extend([ColumnPlotsColumn(goal.name) for goal in learning_goals])
+        for goal in learning_goals:
+            columns.append(ColumnPlotsColumn(goal.name))
+            columns.append(LinePlotsColumn(f"{goal.name} EWM"))
+            
         self.sheet.add_columns(columns)
 
     def analyse_user(self, user: User):
@@ -35,5 +38,14 @@ class LearningGoalsAnalyser(Analyser):
             ).convert_to_list_of_tuples()
 
             user_data[f"{learning_goal.name}"] = progression
+
+            ewm = (
+                progressions[i]
+                .convert_to_exponential_weighted_moving_average(0.5)
+                .select_periods(active_periods, 0, 1)
+                .convert_to_list_of_tuples()
+            )
+
+            user_data[f"{learning_goal.name} EWM"] = ewm
 
         self.sheet.add_row(user_data)

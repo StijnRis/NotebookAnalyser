@@ -17,3 +17,13 @@ class TypeCastingLearningGoal(LearningGoal):
             and code.func.id
             in {"int", "float", "str", "bool", "list", "dict", "set", "tuple"}
         )
+
+    def found_in_error(self, error_name: str, traceback: str, code: str) -> bool:
+        """
+        Detects type casting errors using error name and message.
+        """
+        if (
+            "typeerror" in error_name.lower()
+        ):
+            return True
+        return False

@@ -110,3 +110,18 @@ class TimeSeries:
         selected_data.append((offset, end_value))
 
         return TimedeltaSeries(selected_data)
+
+    def convert_to_exponential_weighted_moving_average(self, alpha: float) -> "TimeSeries":
+        """
+        Convert the time series data to an exponential weighted moving average.
+        """
+        if not self.data:
+            return TimeSeries([])
+
+        ewma = [(self.data[0][0], self.data[0][1])]
+        for i in range(1, len(self.data)):
+            ewma.append((self.data[i][0], alpha * self.data[i][1] + (1 - alpha) * ewma[i - 1][1]))
+
+        return TimeSeries(ewma)
+    
+    # def apply_bayesian_knowledge_tracing

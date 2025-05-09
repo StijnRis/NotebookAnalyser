@@ -19,7 +19,7 @@ class SourceCode(Event):
 
     def get_ast(self) -> ast.Module:
         try:
-            return ast.parse(self.get_code())
+            return ast.parse(self.code)
         except SyntaxError:
             return ast.Module(body=[], type_ignores=[])
 
@@ -27,10 +27,7 @@ class SourceCode(Event):
         body = []
         parsed_ast = self.get_ast()
         for node in ast.walk(parsed_ast):
-            if (
-                hasattr(node, "lineno")
-                and node.lineno in lines
-            ):
+            if hasattr(node, "lineno") and node.lineno in lines:
                 body.append(node)
         return body
 
@@ -58,11 +55,11 @@ class SourceCode(Event):
         )
         return differences
 
-    def get_line_numbers_of_new_code(self, original: "SourceCode") -> list[int]:
+    def get_line_numbers_of_added_code(self, new_code: "SourceCode") -> list[int]:
         """
-        Returns the lines numbers of the lines that were added in this file
+        Returns the lines numbers of the lines that were added in the other file
         """
-        diff = ndiff(original.get_code().splitlines(), self.get_code().splitlines())
+        diff = ndiff(self.get_code().splitlines(), new_code.get_code().splitlines())
 
         original_line = 0
         new_line = 0
@@ -83,14 +80,13 @@ class SourceCode(Event):
 
         return changes
 
-    def get_asts_of_new_code(self, original: "SourceCode") -> list[ast.AST]:
+    def get_added_ast_items(self, new_code: "SourceCode") -> list[ast.AST]:
         """
-        Returns the AST of the lines that were added in this file
+        Returns the AST of the lines that were added in the other file
         """
-        lines = self.get_line_numbers_of_new_code(original)
-        return self.get_ast_of_lines(lines)
-    
-    
+        lines = self.get_line_numbers_of_added_code(new_code)
+        return new_code.get_ast_of_lines(lines)
+
     def get_learning_goals_applied_on_lines(
         self, lines: list[int], learning_goals: list[LearningGoal]
     ) -> list[LearningGoal]:

@@ -39,7 +39,9 @@ class Chatbot:
         }
 
         response = requests.post(self.url, headers=headers, json=data)
-
+        if response.status_code != 200:
+            raise ValueError(f"Error: {response.status_code} - {response.text}")
+        
         self.cache[question] = response.json()["choices"][0]["message"]["content"]
 
         # Save cache to file every 10 questions

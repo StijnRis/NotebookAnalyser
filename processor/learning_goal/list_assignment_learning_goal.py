@@ -14,3 +14,19 @@ class ListAssignmentLearningGoal(LearningGoal):
         return isinstance(code, ast.Assign) and isinstance(
             code.targets[0], ast.Subscript
         )
+
+    def found_in_error(self, error_name: str, traceback: str, code: str) -> bool:
+        """
+        Detects list assignment errors using error name and message.
+        """
+        error_name_l = error_name.lower()
+        if "indexerror" in error_name_l:
+            return True
+        if (
+            "typeerror" in error_name_l
+            and "object is not subscriptable" in error_name_l
+        ):
+            return True
+        if "keyerror" in error_name_l:
+            return True
+        return False

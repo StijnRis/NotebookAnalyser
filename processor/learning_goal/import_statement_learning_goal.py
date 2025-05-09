@@ -12,3 +12,11 @@ class ImportStatementLearningGoal(LearningGoal):
         Checks if the learning goal is applied in the code. Does not check childs of the ast node.
         """
         return isinstance(code, ast.Import) or isinstance(code, ast.ImportFrom)
+
+    def found_in_error(self, error_name: str, traceback: str, code: str) -> bool:
+        """
+        Detects import statement errors using error name and traceback.
+        """
+        if "syntaxerror" in error_name.lower() and "import" in traceback.lower():
+            return True
+        return False

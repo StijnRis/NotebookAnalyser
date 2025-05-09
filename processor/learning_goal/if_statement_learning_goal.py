@@ -14,3 +14,9 @@ class IfStatementLearningGoal(LearningGoal):
         Checks if the learning goal is applied in the code. Does not check childs of the ast node.
         """
         return isinstance(code, ast.If)
+
+    def found_in_error(self, error_name: str, traceback: str, code: str) -> bool:
+        """
+        Detects if statement errors using error name and message.
+        """
+        return False

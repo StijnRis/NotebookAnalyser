@@ -19,10 +19,6 @@ class CodeFileAnalyser(Analyser):
             [
                 TextColumn("Username"),
                 TextColumn("File"),
-                DatetimeColumn("Start passive time"),
-                DatetimeColumn("Start active time"),
-                DatetimeColumn("End active time"),
-                DatetimeColumn("End passive time"),
                 TimePeriodColumn("Active periods"),
                 NumericColumn("Amount of editing events"),
                 NumericColumn("Tab switches"),
@@ -72,10 +68,6 @@ class CodeFileAnalyser(Analyser):
                 {
                     "Username": username,
                     "File": file_log.get_path(),
-                    "Start passive time": file_log.get_start_passive_time(),
-                    "Start active time": file_log.get_start_active_time(),
-                    "End active time": file_log.get_end_active_time(),
-                    "End passive time": file_log.get_end_passive_time(),
                     "Active periods": active_periods,
                     "Amount of editing events": file_log.get_editing_log().get_amount_of_events(),
                     "Tab switches": file_log.get_editing_log().get_amount_of_tab_switches(),

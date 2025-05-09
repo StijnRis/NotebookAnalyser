@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta
-from difflib import unified_diff
+from functools import lru_cache
 
 from content_log.code_versions_log.code_versions_log import CodeVersionsLog
+from content_log.edit_run_cycle import EditRunCycle
 from content_log.event_log.events_log import EditingLog
-from content_log.execution_log.execution_result import ExecutionErrorResult
 from content_log.execution_log.file_execution_log import FileExecutionLog
 from event_log.event import Event
 from event_log.event_log import EventLog
@@ -100,36 +100,34 @@ class FileLog(EventLog):
 
         return event_sequence
 
-    # TODO remove
-    def get_code_fix_for_error(self, error: ExecutionErrorResult) -> str:
+    @lru_cache(maxsize=None)
+    def get_all_edit_run_cycles(self) -> list[EditRunCycle]:
         """
-        Get the changes made to the code after a runtime error.
-        This is done by comparing the code of the error and after the error.
+        Get all edit run cycles in the file log.
         """
-        time = error.get_time()
-        fixed_execution = self.file_execution_log.get_first_successful_execution_after(
-            time
+        edit_run_cycles: list[EditRunCycle] = []
+
+        previous_runned_code = self.code_version_log.get_code_file_at(
+            self.code_version_log.get_start_time()
         )
-
-        if fixed_execution is None:
-            return "No fix"
-
-        code_file = self.code_version_log.get_code_file_at(time)
-        code_file_after = self.code_version_log.get_code_file_at(
-            fixed_execution.get_time()
+        previous_successful_code = self.code_version_log.get_code_file_at(
+            self.code_version_log.get_start_time()
         )
-        code_file = code_file.get_code()
-        code_file_after = code_file_after.get_code()
+        for execution in self.file_execution_log.get_executions():
+            time = execution.get_time()
+            code_file = self.code_version_log.get_code_file_at(time)
 
-        differences = "\n".join(
-            unified_diff(
-                code_file.splitlines(), code_file_after.splitlines(), lineterm=""
+            edit_run_cycle = EditRunCycle(
+                execution, code_file, previous_runned_code, previous_successful_code
             )
-        )
+            edit_run_cycles.append(edit_run_cycle)
 
-        return differences
+            previous_runned_code = code_file
+            if execution.get_error() is None:
+                previous_successful_code = code_file
 
-    # TODO merge with executing analyser (Now it is duplicated)
+        return edit_run_cycles
+
     def get_learning_goals_progression(
         self, learning_goals: list[LearningGoal]
     ) -> list[TimeSeries]:
@@ -138,40 +136,20 @@ class FileLog(EventLog):
         """
         datas = [[] for _ in learning_goals]
 
-        previous_successful_execution = None
-        errors_before_succes: list[ExecutionErrorResult] = []
-        for execution in self.file_execution_log.get_executions():
-            error = execution.get_error()
-            if error is not None:
-                errors_before_succes.append(error)
-                continue
-
-            if previous_successful_execution is None:
-                previous_successful_execution = execution
-                continue
-
-            time = execution.get_time()
-
-            applied_learning_goals = (
-                self.code_version_log.get_learning_goals_applied_between(
-                    previous_successful_execution.get_time(), time, learning_goals
-                )
-            )
-
-            
-
-            for index, learning_goal in enumerate(learning_goals):
-                amount_of_times_applied = applied_learning_goals.count(learning_goal)
-                if amount_of_times_applied > 0:
-                    # if len(datas[index]) == 0:
-                    #     score = 0
-                    # else:
-                    #     score = datas[index][-1][1]
-                    score = 1 if len(errors_before_succes) == 0 else -1
-                    datas[index].append((time, score))
-
-            previous_successful_execution = execution
-            errors_before_succes = []
+        for edit_run_cycle in self.get_all_edit_run_cycles():
+            if edit_run_cycle.get_execution().get_error() is None:
+                applied_learning_goals = edit_run_cycle.get_applied_learning_goals(learning_goals)
+                for index, learning_goal in enumerate(learning_goals):
+                    if learning_goal in applied_learning_goals:
+                        datas[index].append(
+                            (edit_run_cycle.get_execution().get_time(), 1)
+                        )
+            else:
+                applied_learning_goals = edit_run_cycle.get_learning_goals_in_error()
+                for error_type in applied_learning_goals:
+                    if error_type is not None:
+                        index = learning_goals.index(error_type)
+                        datas[index].append((edit_run_cycle.get_execution().get_time(), -1))
 
         result = []
         for index, goal in enumerate(learning_goals):

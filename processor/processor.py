@@ -4,9 +4,8 @@ from datetime import datetime
 
 from analyser.analyser import Analyser
 from analyser.code_file_analyser import CodeFileAnalyser
-from analyser.editing_analyser import EditingAnalyser
+from analyser.edit_run_cycle_analyser import EditRunCycleAnalyser
 from analyser.event_sequence_analysis import EventSequenceAnalysis
-from analyser.execution_analyser import ExecutionAnalyser
 from analyser.file_activity_analyser import FileActivityAnalyser
 from analyser.interaction_analyser import InteractionAnalyser
 from analyser.learning_goals_analyser import LearningGoalsAnalyser
@@ -40,6 +39,7 @@ from processor.learning_goal.print_statement_learning_goal import (
     PrintStatementLearningGoal,
 )
 from processor.learning_goal.type_casting_learning_goal import TypeCastingLearningGoal
+from processor.learning_goal.typo_learning_goal import TypoLearningGoal
 from processor.learning_goal.variable_assignment_learning_goal import (
     VariableAssignmentLearningGoal,
 )
@@ -69,6 +69,7 @@ class Processor:
             ListAccessLearningGoal(),
             ListAssignmentLearningGoal(),
             ImportStatementLearningGoal(),
+            TypoLearningGoal(),
         ]
 
         self.execution_error_result_analyser = ChatbotExecutionErrorResultAnalyser(
@@ -76,15 +77,14 @@ class Processor:
         )
 
         self.analysers: list[Analyser] = [
-            UserAnalyser(),
-            CodeFileAnalyser(),
-            EventSequenceAnalysis(),
-            FileActivityAnalyser(),
+            # UserAnalyser(),
+            # CodeFileAnalyser(),
+            # EventSequenceAnalysis(),
+            # FileActivityAnalyser(),
             QuestionAnalyser(),
             InteractionAnalyser(),
-            EditingAnalyser(self.learning_goals),
-            ExecutionAnalyser(self.learning_goals),
-            LearningGoalsAnalyser(self.learning_goals),
+            # EditRunCycleAnalyser(self.learning_goals),
+            # LearningGoalsAnalyser(self.learning_goals),
         ]
 
         self.load_users()

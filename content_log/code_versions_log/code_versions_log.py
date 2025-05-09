@@ -1,4 +1,4 @@
-import code
+import ast
 from datetime import datetime
 from functools import lru_cache
 from typing import Sequence
@@ -65,7 +65,7 @@ class CodeVersionsLog(EventLog):
 
         if closest_code_file is None:
             return CodeFile(time, "", "")
-        
+
         # if closest_code_file.get_time() != time:
         #     print(f"Code file not found at time {time}, using file at time {closest_code_file.get_time()}")
 
@@ -75,7 +75,6 @@ class CodeVersionsLog(EventLog):
         """
         Remove duplicate code files.
         """
-        
 
         new_code_files: list[CodeFile] = []
         for code_file in self.code_files:
@@ -115,8 +114,21 @@ class CodeVersionsLog(EventLog):
         previous_code_version = self.get_code_file_at(start)
         code_version = self.get_code_file_at(end)
 
-        lines_changed = code_version.get_line_numbers_of_new_code(previous_code_version)
+        lines_changed = previous_code_version.get_line_numbers_of_added_code(
+            code_version
+        )
 
         return code_version.get_learning_goals_applied_on_lines(
             lines_changed, learning_goals
         )
+
+    def get_added_ast_items_between(
+        self, start: datetime, end: datetime
+    ) -> list[ast.AST]:
+        """
+        Get the learning goals applied between two datetime points.
+        """
+        previous_code_version = self.get_code_file_at(start)
+        code_version = self.get_code_file_at(end)
+
+        return previous_code_version.get_added_ast_items(code_version)

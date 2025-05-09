@@ -12,3 +12,11 @@ class VariableAssignmentLearningGoal(LearningGoal):
         Checks if the learning goal is applied in the code. Does not check childs of the ast node.
         """
         return isinstance(code, (ast.Assign, ast.AugAssign))
+
+    def found_in_error(self, error_name: str, traceback: str, code: str) -> bool:
+        """
+        Detects variable assignment errors using error name and message.
+        """
+        if "nameerror" in error_name.lower() and "not defined" in traceback.lower():
+            return True
+        return False

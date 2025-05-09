@@ -12,3 +12,11 @@ class WhileLoopLearningGoal(LearningGoal):
         Checks if the learning goal is applied in the code. Does not check childs of the ast node.
         """
         return isinstance(code, ast.While)
+
+    def found_in_error(self, error_name: str, traceback: str, code: str) -> bool:
+        """
+        Detects while loop errors using error name and traceback.
+        """
+        if "syntaxerror" in error_name.lower() and "while" in traceback.lower():
+            return True
+        return False
