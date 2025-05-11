@@ -3,7 +3,13 @@ import traceback
 from datetime import datetime
 
 from analyser.analyser import Analyser
+from analyser.code_file_analyser import CodeFileAnalyser
+from analyser.edit_run_cycle_analyser import EditRunCycleAnalyser
+from analyser.event_sequence_analysis import EventSequenceAnalysis
+from analyser.file_activity_analyser import FileActivityAnalyser
 from analyser.interaction_activity_analyser import InteractionActivityAnalyser
+from analyser.learning_goals_analyser import LearningGoalsAnalyser
+from analyser.user_analyser import UserAnalyser
 from chat_log.analyser.chatbot_chat_message_analyser import ChatbotChatMessageAnalyser
 from chatbot import Chatbot
 from content_log.execution_log.analyser.chatbot_execution_error_result_analyser import (
@@ -70,13 +76,13 @@ class Processor:
         )
 
         self.analysers: list[Analyser] = [
-            # UserAnalyser(),
-            # CodeFileAnalyser(),
-            # EventSequenceAnalysis(),
-            # FileActivityAnalyser(),
+            UserAnalyser(),
+            CodeFileAnalyser(),
+            EventSequenceAnalysis(),
+            FileActivityAnalyser(),
             InteractionActivityAnalyser(self.learning_goals),
-            # EditRunCycleAnalyser(self.learning_goals),
-            # LearningGoalsAnalyser(self.learning_goals),
+            EditRunCycleAnalyser(self.learning_goals),
+            LearningGoalsAnalyser(self.learning_goals),
         ]
 
         self.load_users()
