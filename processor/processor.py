@@ -74,7 +74,7 @@ class Processor:
             # CodeFileAnalyser(),
             # EventSequenceAnalysis(),
             # FileActivityAnalyser(),
-            InteractionActivityAnalyser(),
+            InteractionActivityAnalyser(self.learning_goals),
             # EditRunCycleAnalyser(self.learning_goals),
             # LearningGoalsAnalyser(self.learning_goals),
         ]

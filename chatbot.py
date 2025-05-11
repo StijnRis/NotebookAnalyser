@@ -46,6 +46,7 @@ class Chatbot:
 
         # Save cache to file every 10 questions
         if len(self.cache) % 10 == 0:
+            print("10 questions asked, saving cache to file")
             self.save_cache()
 
         return self.cache[question]

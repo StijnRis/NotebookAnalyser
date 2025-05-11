@@ -1,4 +1,5 @@
 from analyser.analyser import Analyser
+from processor.learning_goal.learning_goal import LearningGoal
 from report.column.boolean_column import BooleanColumn
 from report.column.datetime_column import DatetimeColumn
 from report.column.enum_column import EnumColumn
@@ -14,8 +15,9 @@ class InteractionActivityAnalyser(Analyser):
     Generate report of a user question
     """
 
-    def __init__(self):
+    def __init__(self, learning_goals: list[LearningGoal]):
         super().__init__()
+        self.learning_goals = learning_goals
         self.sheet.add_columns(
             [
                 TextColumn("Username"),
@@ -24,6 +26,7 @@ class InteractionActivityAnalyser(Analyser):
                 MultilineTextColumn("Answer"),
                 EnumColumn("Question type"),
                 EnumColumn("Purpose"),
+                TextColumn("Learning goals"),
                 TimedeltaColumn("Waiting time"),
                 NumericColumn("Question length"),
                 NumericColumn("Answer length"),
@@ -50,6 +53,7 @@ class InteractionActivityAnalyser(Analyser):
                     "Answer": interaction.get_answer().body,
                     "Question type": interaction.get_question().get_question_type(),
                     "Purpose": interaction.get_question().get_question_purpose(),
+                    "Learning goals": ", ".join(goal.name for goal in interaction.get_question().get_question_learning_goals(tuple(self.learning_goals))),
                     "Waiting time": interaction.get_waiting_time(),
                     "Question length": interaction.get_question().get_length(),
                     "Answer length": interaction.get_answer().get_length(),

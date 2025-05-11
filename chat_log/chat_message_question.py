@@ -4,6 +4,7 @@ from functools import lru_cache
 
 from chat_log.analyser.chat_message_analyser import ChatMessageAnalyser
 from chat_log.chat_message import ChatMessage
+from processor.learning_goal.learning_goal import LearningGoal
 
 
 class QuestionPurpose(Enum):
@@ -58,3 +59,9 @@ class ChatMessageQuestion(ChatMessage):
     @lru_cache(maxsize=None)
     def get_question_type(self):
         return self.chat_message_analyser.get_question_type(self)
+
+    @lru_cache(maxsize=None)
+    def get_question_learning_goals(self, learning_goals: list[LearningGoal]):
+        return self.chat_message_analyser.get_question_learning_goals(
+            self, learning_goals
+        )

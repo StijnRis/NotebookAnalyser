@@ -22,7 +22,7 @@ class ChatbotExecutionErrorResultAnalyser(ExecutionErrorResultAnalyser):
                 for error_type in self.learning_goals
             ]
         )
-        query = f"You are an instructor that clasifies mistakes. You first reason about them and then give your final verdict on the last line. Structure the last line as following: 'The learning goal is [name of learning goal]'  . Classify the following error into one of the following learning goals: \n{learning_goals_string}\n\n Code: \n {code_file.get_code()}. \n\n Error: \n {error_event.get_error_value()} \n {error_event.get_cleaned_traceback()}"
+        query = f"You are an instructor that classifies mistakes. You first reason about them and then give your final verdict on the last line. Structure the last line as following: 'The learning goal is [name of learning goal]'. Classify the following error into one of the following learning goals: \n{learning_goals_string}\n\n Code: \n {code_file.get_code()}. \n\n Error: \n {error_event.get_error_value()} \n {error_event.get_cleaned_traceback()}"
         for i in range(5):
             if i == 0:
                 response = self.chatbot.ask_question(query).lower().strip()

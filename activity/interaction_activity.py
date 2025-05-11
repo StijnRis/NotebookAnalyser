@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from chat_log.chat_interaction import ChatInteraction
 from content_log.file_log import FileLog
+from processor.learning_goal.learning_goal import LearningGoal
 
 
 class InteractionActivity:
