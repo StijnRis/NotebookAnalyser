@@ -1,4 +1,3 @@
-import re
 from datetime import datetime
 from typing import Generic, List, TypeVar
 
@@ -65,12 +64,7 @@ class ChatLog(Generic[T]):
     def get_included_code_snippets(self):
         codes: List[str] = []
         for message in self.messages:
-            matches = re.finditer(
-                r"(\`\`\`python|\`)((.|\n)+?)\`{1,3}", message.body, re.DOTALL
-            )
-            for match in matches:
-                code_snippet = match.group(2)
-                codes.append(code_snippet.strip())
+            codes.extend(message.get_included_code_snippets())
 
         return codes
 

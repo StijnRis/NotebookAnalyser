@@ -1,6 +1,8 @@
+import code
 from datetime import datetime
 
 from activity.file_activity import FileActivity
+from activity.interaction_activity import InteractionActivity
 from chat_log.chat_log import ChatLog
 from content_log.workspace_log import WorkspaceLog
 
@@ -29,6 +31,22 @@ class User:
 
     def get_files(self):
         return self.files
+
+    def get_interaction_activities(self) -> list[InteractionActivity]:
+        result = []
+        for interaction in self.chat_log.get_interactions():
+            time = interaction.get_question().get_time()
+
+            activity = InteractionActivity(
+                interaction,
+                self.workspace_log.get_active_file_at(time),
+                self.workspace_log.get_first_accessed_file_after(
+                    interaction.get_question().get_time()
+                ),
+            )
+            result.append(activity)
+
+        return result
 
     def get_file_activities(self) -> list[FileActivity]:
         activities: list[FileActivity] = []

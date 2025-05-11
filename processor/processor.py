@@ -3,14 +3,7 @@ import traceback
 from datetime import datetime
 
 from analyser.analyser import Analyser
-from analyser.code_file_analyser import CodeFileAnalyser
-from analyser.edit_run_cycle_analyser import EditRunCycleAnalyser
-from analyser.event_sequence_analysis import EventSequenceAnalysis
-from analyser.file_activity_analyser import FileActivityAnalyser
-from analyser.interaction_analyser import InteractionAnalyser
-from analyser.learning_goals_analyser import LearningGoalsAnalyser
-from analyser.question_analyser import QuestionAnalyser
-from analyser.user_analyser import UserAnalyser
+from analyser.interaction_activity_analyser import InteractionActivityAnalyser
 from chat_log.analyser.chatbot_chat_message_analyser import ChatbotChatMessageAnalyser
 from chatbot import Chatbot
 from content_log.execution_log.analyser.chatbot_execution_error_result_analyser import (
@@ -81,8 +74,7 @@ class Processor:
             # CodeFileAnalyser(),
             # EventSequenceAnalysis(),
             # FileActivityAnalyser(),
-            QuestionAnalyser(),
-            InteractionAnalyser(),
+            InteractionActivityAnalyser(),
             # EditRunCycleAnalyser(self.learning_goals),
             # LearningGoalsAnalyser(self.learning_goals),
         ]

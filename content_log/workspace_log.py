@@ -19,6 +19,10 @@ class WorkspaceLog(EventLog):
 
         self.check_invariants()
 
+    def check_invariants(self):
+        for file_log in self.file_logs:
+            file_log.check_invariants()
+
     def get_events(self) -> list[Event]:
         """
         Get all (time, event_type) pairs of the file log
@@ -31,10 +35,6 @@ class WorkspaceLog(EventLog):
         sequence.sort(key=lambda x: x.get_time())
 
         return sequence
-
-    def check_invariants(self):
-        for file_log in self.file_logs:
-            file_log.check_invariants()
 
     def get_amount_of_files(self) -> int:
         return len(self.file_logs)
@@ -70,6 +70,25 @@ class WorkspaceLog(EventLog):
                 if closest_time is None or event.get_time() > closest_time:
                     closest_time = event.get_time()
                     closest_file = file_log
+
+        return closest_file
+
+    def get_first_accessed_file_after(self, time: datetime):
+        """
+        Get the file that is first accessed after a certain time
+        """
+
+        closest_time = None
+        closest_file = None
+        for file_log in self.file_logs:
+            for event in file_log.get_editing_log().get_events():
+                if event.get_time() < time:
+                    continue
+
+                if closest_time is None or event.get_time() < closest_time:
+                    closest_time = event.get_time()
+                    closest_file = file_log
+
 
         return closest_file
 

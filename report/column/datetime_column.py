@@ -25,3 +25,13 @@ class DatetimeColumn(Column[datetime]):
         worksheet.set_column(column_nr, column_nr, 13)
         for row, item in enumerate(self.items, start=1):
             worksheet.write(row, column_nr, item, date_format)
+
+        worksheet.conditional_format(
+            1,
+            column_nr,
+            len(self.items),
+            column_nr,
+            {
+                "type": "3_color_scale",
+            },
+        )
