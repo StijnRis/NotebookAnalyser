@@ -31,7 +31,7 @@ class LearningGoalsAnalyser(Analyser):
         user_data: dict[str, Any] = {"Username": username}
 
         active_periods = workspace_log.get_active_periods()
-        progressions = workspace_log.get_learning_goals_progression(self.learning_goals)
+        progressions = workspace_log.get_learning_goals_progression(tuple(self.learning_goals))
         for i, learning_goal in enumerate(self.learning_goals):
             progression = (
                 progressions[i].select_periods(active_periods, 0, 0)

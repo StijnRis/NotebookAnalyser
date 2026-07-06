@@ -1,4 +1,5 @@
 from datetime import datetime
+from functools import lru_cache
 
 from content_log.file_log import FileLog
 from event_log.event import Event
@@ -92,6 +93,7 @@ class WorkspaceLog(EventLog):
 
         return closest_file
 
+    @lru_cache(maxsize=None)
     def get_learning_goals_progression(
         self, learning_goals: list[LearningGoal]
     ) -> list[TimeSeries]:
@@ -102,7 +104,7 @@ class WorkspaceLog(EventLog):
         progressions = [TimeSeries([]) for _ in learning_goals]
         for file_log in self.file_logs:
             progressions_file_log = file_log.get_learning_goals_progression(
-                learning_goals
+                tuple(learning_goals)
             )
             for index in range(len(learning_goals)):
                 progressions[index] = progressions[

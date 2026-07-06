@@ -128,6 +128,7 @@ class FileLog(EventLog):
 
         return edit_run_cycles
 
+    @lru_cache(maxsize=None)
     def get_learning_goals_progression(
         self, learning_goals: list[LearningGoal]
     ) -> list[TimeSeries]:
@@ -138,7 +139,9 @@ class FileLog(EventLog):
 
         for edit_run_cycle in self.get_all_edit_run_cycles():
             if edit_run_cycle.get_execution().get_error() is None:
-                applied_learning_goals = edit_run_cycle.get_applied_learning_goals(learning_goals)
+                applied_learning_goals = edit_run_cycle.get_applied_learning_goals(
+                    learning_goals
+                )
                 for index, learning_goal in enumerate(learning_goals):
                     if learning_goal in applied_learning_goals:
                         datas[index].append(
@@ -149,9 +152,13 @@ class FileLog(EventLog):
                 for error_type in applied_learning_goals:
                     if error_type is not None:
                         index = learning_goals.index(error_type)
-                        datas[index].append((edit_run_cycle.get_execution().get_time(), -1))
+                        datas[index].append(
+                            (edit_run_cycle.get_execution().get_time(), -1)
+                        )
 
         result = []
         for index, goal in enumerate(learning_goals):
             result.append(TimeSeries(datas[index]))
         return result
+
+    

@@ -12,6 +12,18 @@ class TimeSeries:
         self.datetimes = [t[0] for t in self.data]
         self.items = [t[1] for t in self.data]
 
+    def count_occurrences(self, value: float) -> int:
+        """
+        Returns the number of times a certain number appears in the series.
+        """
+        return self.items.count(value)
+    
+    def get_total_count(self) -> int:
+        """
+        Returns the total number of items in the series.
+        """
+        return len(self.items)
+
     def get_progression_at(self, moment: datetime):
         """
         Calculate the progression of a file at some time
@@ -60,6 +72,22 @@ class TimeSeries:
                 for i in range(len(self.data))
             ],
         )
+
+    def select_period(self, start: datetime, end: datetime) -> "TimeSeries":
+        """
+        Select the active time of the progression. It returns a new TimeSeries object.
+        """
+
+        if len(self.data) == 0:
+            return TimeSeries([])
+
+        selected_data = []
+        for i in range(len(self.data)):
+            time = self.data[i][0]
+            if start <= time <= end:
+                selected_data.append(self.data[i])
+
+        return TimeSeries(selected_data)
 
     def select_periods(
         self, active_time: list[tuple[datetime, datetime]], start_value, end_value
@@ -111,7 +139,9 @@ class TimeSeries:
 
         return TimedeltaSeries(selected_data)
 
-    def convert_to_exponential_weighted_moving_average(self, alpha: float) -> "TimeSeries":
+    def convert_to_exponential_weighted_moving_average(
+        self, alpha: float
+    ) -> "TimeSeries":
         """
         Convert the time series data to an exponential weighted moving average.
         """
@@ -120,8 +150,11 @@ class TimeSeries:
 
         ewma = [(self.data[0][0], self.data[0][1])]
         for i in range(1, len(self.data)):
-            ewma.append((self.data[i][0], alpha * self.data[i][1] + (1 - alpha) * ewma[i - 1][1]))
+            ewma.append(
+                (
+                    self.data[i][0],
+                    alpha * self.data[i][1] + (1 - alpha) * ewma[i - 1][1],
+                )
+            )
 
         return TimeSeries(ewma)
-    
-    # def apply_bayesian_knowledge_tracing

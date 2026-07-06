@@ -1,8 +1,10 @@
 import difflib
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from chat_log.chat_interaction import ChatInteraction
 from content_log.file_log import FileLog
+from content_log.workspace_log import WorkspaceLog
+from processor.learning_goal import learning_goal
 from processor.learning_goal.learning_goal import LearningGoal
 
 
@@ -12,10 +14,14 @@ class InteractionActivity:
         interaction: ChatInteraction,
         previous_code_log: FileLog | None,
         next_code_log: FileLog | None,
+        workspace_log: WorkspaceLog,
+        learning_goals: list[LearningGoal],
     ):
         self.interaction = interaction
         self.previous_code_log = previous_code_log
         self.next_code_log = next_code_log
+        self.workspace_log = workspace_log
+        self.learning_goals = learning_goals
 
     def get_interaction(self) -> ChatInteraction:
         return self.interaction
@@ -25,6 +31,9 @@ class InteractionActivity:
 
     def get_next_code_log(self) -> FileLog | None:
         return self.next_code_log
+
+    def get_workspace_log(self) -> WorkspaceLog:
+        return self.workspace_log
 
     def get_progression_in_next_10_minutes(self) -> float:
         if self.next_code_log is None:
@@ -40,6 +49,29 @@ class InteractionActivity:
             self.interaction.get_question().get_time()
         )
         return output_progression_in_10_minutes - current_output_progression
+
+    def get_increase_in_success_rate(self) -> float:
+        if self.previous_code_log is None or self.next_code_log is None:
+            return 0.0
+        
+        applied_learning_goals = self.interaction.get_question().get_question_learning_goals(tuple(self.learning_goals))
+
+        progressions = self.workspace_log.get_learning_goals_progression(tuple(self.learning_goals))
+        increases = []
+        for i, progression in enumerate(progressions):
+            if self.learning_goals[i] not in applied_learning_goals:
+                continue
+            if progression.get_total_count() == 0:
+                continue
+            progression_before = progression.select_period(datetime.min, self.interaction.get_question().get_time())
+            progression_after = progression.select_period(self.interaction.get_question().get_time(), datetime.max)
+            if progression_before.get_total_count() == 0 or progression_after.get_total_count() == 0:
+                continue
+            success_rate_before = progression_before.count_occurrences(1) / progression_before.get_total_count()
+            success_rate_after = progression_after.count_occurrences(1) / progression_after.get_total_count()
+            increases.append(success_rate_after - success_rate_before)
+        
+        return sum(increases) / len(increases) if increases else 0.0
 
     def get_similarity_to_code(self) -> float:
         """

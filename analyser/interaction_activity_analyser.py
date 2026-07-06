@@ -36,11 +36,12 @@ class InteractionActivityAnalyser(Analyser):
                 TextColumn("Answer language"),
                 NumericColumn("Similarity to code"),
                 NumericColumn("Output progression in next 10 minutes"),
+                NumericColumn("Increase in success rate"),
             ]
         )
 
     def analyse_user(self, user: User):
-        interactions = user.get_interaction_activities()
+        interactions = user.get_interaction_activities(self.learning_goals)
 
         for interaction_activity in interactions:
             interaction = interaction_activity.get_interaction()
@@ -63,5 +64,6 @@ class InteractionActivityAnalyser(Analyser):
                     "Code in answer": interaction.get_answer().contains_code(),
                     "Similarity to code": interaction_activity.get_similarity_to_code(),
                     "Output progression in next 10 minutes": interaction_activity.get_progression_in_next_10_minutes(),
+                    "Increase in success rate": interaction_activity.get_increase_in_success_rate(),
                 }
             )

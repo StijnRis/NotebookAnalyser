@@ -66,6 +66,8 @@ class ChatMessage(ABC):
         return False
 
     def get_language(self):
+        if self.body == "":
+            return "unknown"
         result = detect(self.body)
         if result == None:
             return "unknown"
